@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
+import DashboardOrganizer from './pages/DashboardOrganizer';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/dashboard-organizer" element={<DashboardOrganizer />} />
 
         {/* Ruta comodín (opcional): si escribe una URL que no existe, lo enviamos al login */}
         <Route path="*" element={<Navigate to="/login" replace />} />
