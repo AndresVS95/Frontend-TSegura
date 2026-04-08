@@ -69,10 +69,10 @@ const DashboardOrganizer: React.FC = () => {
             <h2 className="text-4xl md:text-5xl font-black mb-4 leading-tight">
               Bienvenido, Organizador
             </h2>
-            <p className="text-blue-100 text-lg mb-8">
-              Aquí podrás gestionar tus eventos y consultar tus estadísticas.
-            </p>
-            <button className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-all">
+            <button 
+              onClick={() => navigate('/crearevento')}
+              className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-all"
+            >
               Crear Nuevo Evento
             </button>
           </div>

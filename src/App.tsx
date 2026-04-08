@@ -5,6 +5,8 @@ import { ForgotPassword } from './pages/ForgotPassword';
 import DashboardOrganizer from './pages/DashboardOrganizer';
 import DashboardBuyer from './pages/Home';
 import PrivateRoute from './components/PrivateRoute';
+import CrearEvento from './pages/CrearEvento';
+import { ComprarBoletos } from './pages/ComprarBoletos';
 
 function App() {
   return (
@@ -33,6 +35,26 @@ function App() {
           element={
             <PrivateRoute allowedRole="ORGANIZADOR">
               <DashboardOrganizer />
+            </PrivateRoute>
+          }
+        />
+
+        {/* Ruta Protegida: Mapa para comprar boletos */}
+        <Route
+          path="/comprar/:eventoId/zona/:zonaId"
+          element={
+            <PrivateRoute allowedRole="COMPRADOR">
+              <ComprarBoletos />
+            </PrivateRoute>
+          }
+        />
+        
+        {/* Wizard para crear eventos */}
+        <Route
+          path="/crearevento"
+          element={
+            <PrivateRoute allowedRole="ORGANIZADOR">
+              <CrearEvento />
             </PrivateRoute>
           }
         />
