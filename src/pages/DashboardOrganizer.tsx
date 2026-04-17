@@ -1,89 +1,186 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-import type { DecodedToken } from './Login';
+import type { DecodedToken } from './Login'; 
+import { eventService } from '../services/eventService'; 
 
 const DashboardOrganizer: React.FC = () => {
   const navigate = useNavigate();
   const [nombre, setNombre] = useState('');
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [eventos, setEventos] = useState<any[]>([]);
+  
+  // Estados para manejo de mensajes (HU-017 y HU-021)
+  const [mensajeError, setMensajeError] = useState<string | null>(null);
+  const [isSuspendido, setIsSuspendido] = useState(false);
+
+  // Función para cargar/refrescar los datos de la tabla
+  const cargarDatos = async () => {
+    try {
+      const data = await eventService.obtenerMisEventos();
+      setEventos(data);
+      setMensajeError(null);
+    } catch (error: any) {
+      // Tarea HU-017: Manejar estado SUSPENDIDO si el backend lo devuelve
+      if (error.message.includes("SUSPENDIDO")) {
+        setIsSuspendido(true);
+      } else {
+        setMensajeError(error.message);
+      }
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-
-    if (!token) {
-      navigate('/login', { replace: true });
-      return;
+    if (!token) { 
+        navigate('/login', { replace: true }); 
+        return; 
     }
 
     try {
       const decoded = jwtDecode<DecodedToken>(token);
-
-      if (decoded.perfil !== 'ORGANIZADOR') {
-        navigate('/login', { replace: true });
-        return;
+      if (decoded.perfil !== 'ORGANIZADOR') { 
+          navigate('/login', { replace: true }); 
+          return; 
       }
-
       setNombre(decoded.nombre_completo);
       setIsAuthorized(true);
-
+      cargarDatos();
     } catch (error) {
       localStorage.removeItem('token');
       navigate('/login', { replace: true });
     }
   }, [navigate]);
 
+  // Tarea HU-021: Función para publicar un borrador
+  const handlePublicar = async (evento: any) => {
+    // Verificación de seguridad: si no hay ID, no procedemos
+    if (!evento.eventoId) {
+      alert("Error: El evento no tiene un ID válido. Asegúrate de que el Backend esté enviando 'eventoId'.");
+      return;
+    }
+
+    try {
+      // 1. Llamamos al servicio pasando el ID y el objeto completo del evento
+      await eventService.publicarEvento(evento.eventoId, evento);
+      
+      setMensajeError(null);
+      alert("¡Evento publicado con éxito! 🎉 El público ya puede ver las entradas.");
+      
+      // 2. REFRESCAMOS LA TABLA para ver el cambio de estado de inmediato
+      await cargarDatos(); 
+      
+    } catch (error: any) {
+      setMensajeError(error.message);
+      alert("No se pudo publicar: " + error.message);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.clear();
-    sessionStorage.clear();
-    navigate('/login', { replace: true });
-    window.location.reload();
+    navigate('/login');
   };
 
   if (!isAuthorized) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      <nav className="bg-white px-8 py-4 shadow-sm border-b border-gray-100 flex justify-between items-center sticky top-0 z-50">
-        <h1 className="text-2xl font-bold text-[#1E5ADF] flex items-center gap-2">
-          <span className="text-3xl">🎫</span> TSegura (Organizer)
-        </h1>
+      {/* Tarea HU-017: Banner de Suspensión */}
+      {isSuspendido && (
+        <div className="bg-red-600 text-white px-8 py-3 text-center font-bold animate-pulse">
+          ⚠️ Tu cuenta se encuentra SUSPENDIDA. Por favor, contacta a soporte@tsegura.com para más información.
+        </div>
+      )}
 
+      {/* Mostrar mensajes de error de API si existen */}
+      {mensajeError && (
+        <div className="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4 mx-10 mt-4 shadow-sm">
+          <p className="font-bold">Aviso del sistema</p>
+          <p>{mensajeError}</p>
+        </div>
+      )}
+
+      <nav className="bg-white px-8 py-4 shadow-sm border-b border-gray-100 flex justify-between items-center sticky top-0 z-50">
+        <h1 className="text-2xl font-bold text-[#1E5ADF]">🎫 TSegura (Organizer)</h1>
         <div className="flex items-center gap-6">
-          <span className="text-sm font-medium text-gray-600 hidden md:block">
-            Hola, <span className="text-gray-900 font-bold">{nombre}</span>
-          </span>
-          <button
-            onClick={handleLogout}
-            className="text-sm font-bold text-red-500 hover:text-red-700 transition-colors"
-          >
-            Cerrar Sesión
-          </button>
+          <span className="text-sm font-medium">Hola, <b>{nombre}</b></span>
+          <button onClick={handleLogout} className="text-sm font-bold text-red-500 hover:underline">Cerrar Sesión</button>
         </div>
       </nav>
 
       <main className="max-w-7xl mx-auto p-6 md:p-10">
-        <section className="bg-[#1E5ADF] rounded-[3rem] p-10 md:p-16 text-white relative overflow-hidden mb-12 shadow-2xl shadow-blue-200">
-          <div className="relative z-10 max-w-2xl">
-            <h2 className="text-4xl md:text-5xl font-black mb-4 leading-tight">
-              Bienvenido, Organizador
-            </h2>
-            <button 
-              onClick={() => navigate('/crearevento')}
-              className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-all"
-            >
-              Crear Nuevo Evento
-            </button>
-          </div>
+        <section className="bg-[#1E5ADF] rounded-[3rem] p-10 text-white mb-12 shadow-2xl">
+          <h2 className="text-4xl font-black mb-4">Panel de Control</h2>
+          <p className="mb-6 opacity-90">Gestiona tus eventos, revisa tus ventas y publica nuevos lanzamientos.</p>
+          <button 
+            onClick={() => navigate('/crearevento')}
+            className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-colors shadow-lg"
+          >
+            + Crear Nuevo Evento
+          </button>
         </section>
 
-        <h3 className="text-2xl font-black text-[#03292e] mb-8 px-2">Mis Eventos</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-           <div className="bg-white p-8 rounded-[2.5rem] border border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-[#1E5ADF] hover:text-[#1E5ADF] transition-all cursor-pointer group">
-              <span className="text-4xl mb-2">+</span>
-              <span className="font-bold">Agregar Evento</span>
-           </div>
+        <h3 className="text-2xl font-black text-[#03292e] mb-6">Mis Eventos</h3>
+
+        <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Evento</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Estado</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Ventas / Recaudo</th>
+                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {eventos.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-10 text-center text-gray-500 italic">No tienes eventos registrados aún.</td>
+                </tr>
+              ) : (
+                eventos.map((evento) => (
+                  <tr key={evento.eventoId || Math.random()} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-bold text-gray-900">{evento.nombre}</div>
+                      <div className="text-xs text-gray-500">{evento.fechaEvento} - {evento.horaEvento}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 text-xs font-bold rounded-full ${
+                        evento.estado === 'PUBLICADO' ? 'bg-green-100 text-green-800' : 
+                        evento.estado === 'BORRADOR' ? 'bg-yellow-100 text-yellow-800' : 
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {evento.estado}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium">{evento.entradasVendidas || 0} / {evento.capacidadTotal || 0} tickets</div>
+                      <div className="text-xs text-green-600 font-bold">${evento.recaudo?.toLocaleString() || 0} total</div>
+                    </td>
+                    <td className="px-6 py-4 text-right flex justify-end gap-3 items-center">
+                      
+                      {/* Tarea HU-021: Botón Publicar solo visible en BORRADOR */}
+                      {evento.estado === 'BORRADOR' && (
+                        <button 
+                          onClick={() => handlePublicar(evento)} 
+                          className="bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-green-700 shadow-sm transition-all"
+                        >
+                          Publicar
+                        </button>
+                      )}
+
+                      <button 
+                        onClick={() => navigate(`/detalles/${evento.eventoId}`)} 
+                        className="text-[#1E5ADF] font-bold text-sm hover:underline"
+                      >
+                        Ver detalles
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </main>
     </div>

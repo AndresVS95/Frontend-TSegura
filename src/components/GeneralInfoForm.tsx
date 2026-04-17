@@ -1,82 +1,71 @@
+// src/components/GeneralInfoForm.tsx
 import React from 'react';
-import { Input } from './Input';
-import { Button } from './Button';
 
-interface Props {
+interface GeneralInfoFormProps {
   formData: any;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   nextStep: () => void;
   errors: Record<string, string>;
 }
 
-export default function GeneralInfoForm({ formData, handleChange, nextStep, errors }: Props) {
-  const hasErrors = Object.keys(errors).length > 0;
-
+const GeneralInfoForm: React.FC<GeneralInfoFormProps> = ({ formData, handleChange, nextStep, errors }) => {
   return (
-    <div className="animate-fade-in w-full">
-      
-      {/* Cabecera idéntica a RegisterOrganizer */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">1. Información Básica</h2>
-        <p className="text-xs text-gray-500 mb-6">
-          Los campos marcados con <span className="font-bold text-gray-700">*</span> son obligatorios.
-        </p>
+    <div className="animate-fade-in flex flex-col gap-6">
+      <h3 className="text-2xl font-bold text-[#03292e] mb-4">Paso 1: Información Básica</h3>
 
-        {/* Campos del formulario */}
-        <div className="grid grid-cols-1 gap-5">
-          
-          <div>
-            <Input 
-              label="Nombre del Evento*" 
-              type="text" 
-              name="nombre"
-              placeholder="Ej: Concierto Fin de Año"
-              value={formData.nombre} 
-              onChange={handleChange} 
-            />
-            {errors.nombre && <p className="text-xs text-red-500 mt-1 font-medium">{errors.nombre}</p>}
-          </div>
+      {/* Nombre del Evento */}
+      <div>
+        <label className="block text-sm font-bold text-gray-700 mb-2">Nombre del Evento</label>
+        <input
+          type="text"
+          name="nombre"
+          value={formData.nombre}
+          onChange={handleChange}
+          className={`w-full px-4 py-3 rounded-xl border ${errors.nombre ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-transparent outline-none transition-all`}
+          placeholder="Ej: Gran Concierto de Rock"
+        />
+        {errors.nombre && <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>}
+      </div>
 
-          <div>
-            <Input 
-              label="Fecha y Hora*" 
-              type="datetime-local" 
-              name="fecha_evento"
-              value={formData.fecha_evento} 
-              onChange={handleChange} 
-            />
-            {errors.fecha_evento && <p className="text-xs text-red-500 mt-1 font-medium">{errors.fecha_evento}</p>}
-          </div>
+      {/* LA MAGIA OCURRE AQUÍ: Input de Fecha y Hora (datetime-local) */}
+      <div>
+        <label className="block text-sm font-bold text-gray-700 mb-2">Fecha y Hora</label>
+        <input
+          type="datetime-local"
+          name="fecha_evento"
+          value={formData.fecha_evento}
+          onChange={handleChange}
+          className={`w-full px-4 py-3 rounded-xl border ${errors.fecha_evento ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-transparent outline-none transition-all`}
+        />
+        <p className="text-gray-400 text-xs mt-1">El sistema separará automáticamente la fecha de la hora para el registro.</p>
+        {errors.fecha_evento && <p className="text-red-500 text-sm mt-1">{errors.fecha_evento}</p>}
+      </div>
 
-          {/* Para la descripción usamos un textarea estilizado para que combine con tus Inputs */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">Descripción*</label>
-            <textarea 
-              name="descripcion"
-              placeholder="Describe los detalles principales de tu evento..."
-              value={formData.descripcion} 
-              onChange={handleChange}
-              rows={4}
-              className={`w-full px-4 py-3 rounded-xl border ${errors.descripcion ? 'border-red-500 focus:ring-red-300' : 'border-gray-300 focus:ring-[#1E5ADF]'} focus:ring-2 focus:border-current outline-none transition-all resize-none shadow-sm text-sm`}
-            />
-            {errors.descripcion && <p className="text-xs text-red-500 mt-1 font-medium">{errors.descripcion}</p>}
-          </div>
+      {/* Descripción */}
+      <div>
+        <label className="block text-sm font-bold text-gray-700 mb-2">Descripción</label>
+        <textarea
+          name="descripcion"
+          value={formData.descripcion}
+          onChange={handleChange}
+          rows={4}
+          className={`w-full px-4 py-3 rounded-xl border ${errors.descripcion ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-transparent outline-none transition-all`}
+          placeholder="Cuéntale al público de qué trata el evento..."
+        />
+        {errors.descripcion && <p className="text-red-500 text-sm mt-1">{errors.descripcion}</p>}
+      </div>
 
-        </div>
-
-        {/* Botón usando tu prop variant="primary" */}
-        <div className="flex justify-end pt-4">
-          <Button 
-            onClick={nextStep} 
-            variant="primary" 
-            className="mt-4"
-            disabled={hasErrors}
-          >
-            Siguiente: Elegir Recinto
-          </Button>
-        </div>
-        
+      {/* Botón Siguiente */}
+      <div className="flex justify-end mt-6 pt-6 border-t border-gray-100">
+        <button
+          onClick={nextStep}
+          className="px-8 py-3 rounded-xl font-bold text-white bg-[#1E5ADF] hover:bg-blue-700 transition-all"
+        >
+          Siguiente Paso
+        </button>
       </div>
     </div>
   );
-}
+};
+
+export default GeneralInfoForm;

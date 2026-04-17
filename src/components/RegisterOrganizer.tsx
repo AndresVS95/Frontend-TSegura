@@ -256,12 +256,13 @@ export const RegisterOrganizer: React.FC<Props> = ({ onBack }) => {
           <Button onClick={nextStep} variant="primary" className="mt-4">Verificar y Continuar</Button>
         </div>
       )}
-
+      {/*aqui se debe ttener en cuenta cuando conectemnos con la pasarela de PAgos para modificarla  */}
       {/* PASO 3: Pago / Finalizar */}
       {step === 3 && (
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-gray-900">Activa tu panel de control</h2>
 
+          {/* Resumen de cobro (Lo que ya tenías) */}
           <div className="bg-blue-50 border-2 border-[#1E5ADF] p-6 rounded-2xl relative">
             <div className="absolute top-0 right-0 bg-[#1E5ADF] text-white px-3 py-1 text-[10px] font-bold rounded-bl-xl">PAGO ÚNICO</div>
             <p className="text-sm font-semibold text-blue-800">Membresía Organizador</p>
@@ -272,6 +273,30 @@ export const RegisterOrganizer: React.FC<Props> = ({ onBack }) => {
             <p className="text-xs text-blue-700 mt-2">✓ Creación ilimitada de eventos y analíticas.</p>
           </div>
 
+          {/* 👇 TAREA AS: Tarjeta de prueba visible para el demo 👇 */}
+          <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
+            <div className="flex items-center gap-2 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <span className="font-bold text-gray-700 text-sm">Modo de Prueba (Demo)</span>
+            </div>
+            <p className="text-xs text-gray-500 mb-3">
+              Para simular el pago, ingresa la siguiente tarjeta cuando el formulario de Stripe esté activo:
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+                <p className="text-[10px] uppercase text-gray-400 font-bold">Número de Tarjeta</p>
+                <p className="font-mono font-bold text-gray-800">4242 4242 4242 4242</p>
+              </div>
+              <div className="bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+                <p className="text-[10px] uppercase text-gray-400 font-bold">Fecha / CVC</p>
+                <p className="font-mono font-bold text-gray-800">Cualquier futura / 123</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Botón de pago */}
           <Button onClick={handleSubmit} variant="primary" disabled={isLoading}>
             {isLoading ? 'Procesando pago y registro...' : 'Pagar y Registrarse'}
           </Button>
