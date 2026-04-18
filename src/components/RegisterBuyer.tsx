@@ -23,18 +23,39 @@ export const RegisterBuyer: React.FC<Props> = ({ onBack }) => {
         perfil: 'COMPRADOR' // Importante para el Backend
     });
 
-    const [errors, setErrors] = useState({ email: '', password: '' });
+    const [errors, setErrors] = useState({ fullname: '', cedula: '', telefono: '', email: '', password: '' });
 
     const validate = () => {
         let isValid = true;
-        const newErrors = { email: '', password: '' };
+        const newErrors = { fullname: '', cedula: '', telefono: '', email: '', password: '' };
 
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        if (!formData.fullname.trim()) {
+            newErrors.fullname = 'El nombre completo es requerido.';
+            isValid = false;
+        }
+
+        if (!formData.cedula.trim()) {
+            newErrors.cedula = 'La cédula es requerida.';
+            isValid = false;
+        }
+
+        if (!formData.telefono.trim()) {
+            newErrors.telefono = 'El teléfono es requerido.';
+            isValid = false;
+        }
+
+        if (!formData.email.trim()) {
+            newErrors.email = 'El correo es requerido.';
+            isValid = false;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
             newErrors.email = 'Formato de correo inválido.';
             isValid = false;
         }
 
-        if (formData.password.length < 8) {
+        if (!formData.password.trim()) {
+            newErrors.password = 'La contraseña es requerida.';
+            isValid = false;
+        } else if (formData.password.length < 8) {
             newErrors.password = 'Mínimo 8 caracteres.';
             isValid = false;
         }
@@ -97,71 +118,80 @@ export const RegisterBuyer: React.FC<Props> = ({ onBack }) => {
                 <p className="text-gray-500">Únete para descubrir los mejores eventos.</p>
             </header>
 
+            <p className="text-xs text-gray-500 mb-6">Los campos marcados con <span className="font-bold text-gray-700">*</span> son obligatorios.</p>
+
             <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Nombre Completo */}
-                <Input
-                    label="Nombre completo*"
-                    placeholder="Ej. Carlos Mendoza"
-                    value={formData.fullname}
-                    onChange={(e) => setFormData({ ...formData, fullname: e.target.value })}
-                    required
-                />
+                <div>
+                    <Input
+                        label="Nombre completo*"
+                        placeholder="Ej. Carlos Mendoza"
+                        value={formData.fullname}
+                        onChange={(e) => setFormData({ ...formData, fullname: e.target.value })}
+                    />
+                    {errors.fullname && <p className="text-red-500 text-xs font-medium mt-1">{errors.fullname}</p>}
+                </div>
 
                 {/* Cédula y Teléfono */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input
-                        label="Cédula*"
-                        placeholder="Documento"
-                        value={formData.cedula}
-                        onChange={(e) => setFormData({ ...formData, cedula: e.target.value })}
-                        required
-                    />
-                    <Input
-                        label="Teléfono*"
-                        placeholder="+57..."
-                        value={formData.telefono}
-                        onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                        required
-                    />
+                    <div>
+                        <Input
+                            label="Cédula*"
+                            placeholder="Documento"
+                            value={formData.cedula}
+                            onChange={(e) => setFormData({ ...formData, cedula: e.target.value })}
+                        />
+                        {errors.cedula && <p className="text-red-500 text-xs font-medium mt-1">{errors.cedula}</p>}
+                    </div>
+                    <div>
+                        <Input
+                            label="Teléfono*"
+                            placeholder="+57..."
+                            value={formData.telefono}
+                            onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                        />
+                        {errors.telefono && <p className="text-red-500 text-xs font-medium mt-1">{errors.telefono}</p>}
+                    </div>
                 </div>
 
                 {/* Email */}
-                <Input
-                    label="Correo electrónico*"
-                    type="email"
-                    placeholder="tu@correo.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
-                />
-                {errors.email && <p className="text-red-500 text-xs font-medium">{errors.email}</p>}
+                <div>
+                    <Input
+                        label="Correo electrónico*"
+                        type="email"
+                        placeholder="tu@correo.com"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                    {errors.email && <p className="text-red-500 text-xs font-medium mt-1">{errors.email}</p>}
+                </div>
 
                 {/* Contraseña */}
-                <Input
-                    label="Crear contraseña*"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Mínimo 8 caracteres"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    rightElement={
-                        <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="text-xs font-bold text-[#1E5ADF] hover:text-blue-800 transition-colors"
-                        >
-                            {showPassword ? "OCULTAR" : "MOSTRAR"}
-                        </button>
-                    }
-                    required
-                />
-                {errors.password && <p className="text-red-500 text-xs font-medium">{errors.password}</p>}
+                <div>
+                    <Input
+                        label="Crear contraseña*"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Mínimo 8 caracteres"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        rightElement={
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="text-xs font-bold text-[#1E5ADF] hover:text-blue-800 transition-colors"
+                            >
+                                {showPassword ? "OCULTAR" : "MOSTRAR"}
+                            </button>
+                        }
+                    />
+                    {errors.password && <p className="text-red-500 text-xs font-medium mt-1">{errors.password}</p>}
+                </div>
 
                 {/* Checkbox de Términos */}
                 <div className="flex items-start mt-6">
                     <input
                         type="checkbox"
                         className="mt-1 h-4 w-4 text-[#1E5ADF] border-gray-300 rounded cursor-pointer"
-                        required
                     />
                     <label className="ml-2 text-sm text-gray-600">
                         Acepto los <span className="text-gray-900 font-bold underline cursor-pointer">términos y condiciones</span>.
