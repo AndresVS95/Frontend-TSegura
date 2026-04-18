@@ -1,48 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
-import type { DecodedToken } from './Login';
-// import SidebarBuyer from '../components/SidebarBuyer'; // Si tienes uno específico
+import { tokenManager } from '../lib/tokenManager';
 
+/**
+ * Dashboard del Comprador.
+ * 
+ * NOTA SENIOR: Ya no necesitamos verificar auth aquí porque
+ * PrivateRoute ya lo hace antes de renderizar este componente.
+ * Antes este archivo tenía un useEffect duplicado de ~25 líneas
+ * que hacía exactamente lo mismo que PrivateRoute.
+ */
 const DashboardBuyer: React.FC = () => {
   const navigate = useNavigate();
-  const [nombre, setNombre] = useState('');
-  const [isAuthorized, setIsAuthorized] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      navigate('/login', { replace: true });
-      return;
-    }
-
-    try {
-      const decoded = jwtDecode<DecodedToken>(token);
-
-      // IMPORTANTE: Aquí filtramos por el rol de Comprador
-      // Verifica si en tu base de datos es 'COMPRADOR', 'CLIENTE' o 'USER'
-      if (decoded.perfil !== 'COMPRADOR') {
-        navigate('/login', { replace: true });
-        return;
-      }
-
-      setNombre(decoded.nombre_completo);
-      setIsAuthorized(true);
-
-    } catch (error) {
-      localStorage.removeItem('token');
-      navigate('/login', { replace: true });
-    }
-  }, [navigate]);
+  const user = tokenManager.getUser();
+  const nombre = user?.nombre_completo ?? 'Usuario';
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.clear();
+    tokenManager.clearAll();
     navigate('/login', { replace: true });
   };
-
-  if (!isAuthorized) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">

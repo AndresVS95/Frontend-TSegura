@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
-import type { DecodedToken } from './Login'; 
-import { eventService } from '../services/eventService'; 
+import { tokenManager } from '../lib/tokenManager';
+import { eventService } from '../services/eventService';
+import type { Evento } from '../types/event.types';
 
+/**
+ * Dashboard del Organizador.
+ * 
+ * NOTA SENIOR: Ya no verificamos auth aquí — PrivateRoute se encarga.
+ * Solo nos preocupamos por la lógica de negocio (cargar eventos, publicar, etc.)
+ */
 const DashboardOrganizer: React.FC = () => {
   const navigate = useNavigate();
-  const [nombre, setNombre] = useState('');
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [eventos, setEventos] = useState<any[]>([]);
-  
-  // Estados para manejo de mensajes (HU-017 y HU-021)
+  const user = tokenManager.getUser();
+  const nombre = user?.nombre_completo ?? 'Organizador';
+
+  const [eventos, setEventos] = useState<Evento[]>([]);
   const [mensajeError, setMensajeError] = useState<string | null>(null);
   const [isSuspendido, setIsSuspendido] = useState(false);
 
@@ -22,7 +27,7 @@ const DashboardOrganizer: React.FC = () => {
       setMensajeError(null);
     } catch (error: any) {
       // Tarea HU-017: Manejar estado SUSPENDIDO si el backend lo devuelve
-      if (error.message.includes("SUSPENDIDO")) {
+      if (error.message?.includes("SUSPENDIDO")) {
         setIsSuspendido(true);
       } else {
         setMensajeError(error.message);
@@ -31,45 +36,21 @@ const DashboardOrganizer: React.FC = () => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { 
-        navigate('/login', { replace: true }); 
-        return; 
-    }
-
-    try {
-      const decoded = jwtDecode<DecodedToken>(token);
-      if (decoded.perfil !== 'ORGANIZADOR') { 
-          navigate('/login', { replace: true }); 
-          return; 
-      }
-      setNombre(decoded.nombre_completo);
-      setIsAuthorized(true);
-      cargarDatos();
-    } catch (error) {
-      localStorage.removeItem('token');
-      navigate('/login', { replace: true });
-    }
-  }, [navigate]);
+    cargarDatos();
+  }, []);
 
   // Tarea HU-021: Función para publicar un borrador
-  const handlePublicar = async (evento: any) => {
-    // Verificación de seguridad: si no hay ID, no procedemos
+  const handlePublicar = async (evento: Evento) => {
     if (!evento.eventoId) {
-      alert("Error: El evento no tiene un ID válido. Asegúrate de que el Backend esté enviando 'eventoId'.");
+      alert("Error: El evento no tiene un ID válido.");
       return;
     }
 
     try {
-      // 1. Llamamos al servicio pasando el ID y el objeto completo del evento
       await eventService.publicarEvento(evento.eventoId, evento);
-      
       setMensajeError(null);
       alert("¡Evento publicado con éxito! 🎉 El público ya puede ver las entradas.");
-      
-      // 2. REFRESCAMOS LA TABLA para ver el cambio de estado de inmediato
-      await cargarDatos(); 
-      
+      await cargarDatos();
     } catch (error: any) {
       setMensajeError(error.message);
       alert("No se pudo publicar: " + error.message);
@@ -77,11 +58,9 @@ const DashboardOrganizer: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
+    tokenManager.clearAll();
+    navigate('/login', { replace: true });
   };
-
-  if (!isAuthorized) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -138,8 +117,8 @@ const DashboardOrganizer: React.FC = () => {
                   <td colSpan={4} className="px-6 py-10 text-center text-gray-500 italic">No tienes eventos registrados aún.</td>
                 </tr>
               ) : (
-                eventos.map((evento) => (
-                  <tr key={evento.eventoId || Math.random()} className="hover:bg-gray-50 transition-colors">
+                eventos.map((evento, index) => (
+                  <tr key={evento.eventoId ?? index} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="text-sm font-bold text-gray-900">{evento.nombre}</div>
                       <div className="text-xs text-gray-500">{evento.fechaEvento} - {evento.horaEvento}</div>
@@ -154,8 +133,8 @@ const DashboardOrganizer: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm font-medium">{evento.entradasVendidas || 0} / {evento.capacidadTotal || 0} tickets</div>
-                      <div className="text-xs text-green-600 font-bold">${evento.recaudo?.toLocaleString() || 0} total</div>
+                      <div className="text-sm font-medium">{evento.entradasVendidas ?? 0} / {evento.capacidadTotal ?? 0} tickets</div>
+                      <div className="text-xs text-green-600 font-bold">${evento.recaudo?.toLocaleString() ?? 0} total</div>
                     </td>
                     <td className="px-6 py-4 text-right flex justify-end gap-3 items-center">
                       
