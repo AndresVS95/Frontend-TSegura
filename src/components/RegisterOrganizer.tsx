@@ -1,14 +1,81 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+// 1. Importaciones de Stripe
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Input } from './Input';
 import { Button } from './Button';
 import { Select } from './Select';
 import { registerOrganizador } from '../services/organizadorService';
 import type { RegisterOrganizadorData } from '../services/organizadorService';
 
+// 🔑 REEMPLAZA CON TU CLAVE PÚBLICA DE STRIPE (pk_test_...)
+const stripePromise = loadStripe('pk_test_51TH9MdLKUrQZ6U0BtOJUb71r2kNLRgMU2L3n0CQICRB5z3RE5xgSJtLjVuF1zJTdJMdho4Gq3TvOapWaeKuDj70W00P8C74S7v');
+
 interface Props {
   onBack: () => void;
 }
+
+// --- SUB-COMPONENTE INTERNO PARA USAR LOS HOOKS DE STRIPE ---
+// Este componente solo renderiza el campo de la tarjeta y maneja la lógica de cobro.
+const StripeCardInput = ({ isActive }: { isActive: boolean, isLoading: boolean, onSubmit: (paymentMethodId: string) => void }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [stripeError, setStripeError] = useState<string | null>(null);
+
+  // Exponemos la función de pago al padre
+  React.useEffect(() => {
+    if (isActive && stripe && elements) {
+      // Definimos una función global temporal para que el padre la llame
+      (window as any).handleStripePayment = async () => {
+        setStripeError(null);
+        const cardElement = elements.getElement(CardElement);
+        if (!cardElement) return null;
+
+        const { error, paymentMethod } = await stripe.createPaymentMethod({
+          type: 'card',
+          card: cardElement,
+        });
+
+        if (error) {
+          setStripeError(error.message || "Error en la tarjeta");
+          return null;
+        }
+        return paymentMethod.id;
+      };
+    }
+    return () => {
+      (window as any).handleStripePayment = null;
+    };
+  }, [isActive, stripe, elements]);
+
+  return (
+    <div className="space-y-3 mt-6 animate-fade-in">
+      <label className="block text-sm font-bold text-gray-700">Método de pago (Tarjeta)*</label>
+
+      {/* Contenedor con TUS estilos de bordes redondeados y sombras */}
+      <div className="p-4 bg-white rounded-2xl border border-gray-200 shadow-sm focus-within:border-[#1E5ADF] transition-colors">
+        <CardElement options={{
+          style: {
+            base: {
+              fontSize: '15px', // Ajustado a tu diseño
+              color: '#1f2937',
+              fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              '::placeholder': { color: '#9ca3af' },
+            },
+          },
+        }} />
+      </div>
+
+      {stripeError && <p className="text-red-500 text-xs font-bold px-1">{stripeError}</p>}
+
+      <p className="text-[10px] text-gray-400 text-center px-4">
+        🔒 Pago seguro procesado por Stripe. Usa la tarjeta <span className="font-bold">4242...4242</span> para pruebas.
+        Tus datos bancarios no tocan nuestros servidores.
+      </p>
+    </div>
+  );
+};
 
 export const RegisterOrganizer: React.FC<Props> = ({ onBack }) => {
   const navigate = useNavigate();
@@ -21,17 +88,11 @@ export const RegisterOrganizer: React.FC<Props> = ({ onBack }) => {
 
   const [formData, setFormData] = useState({
     // Datos del Usuario
-    nombre: '',
-    correo: '',
-    contrasena: '',
-    fechaNacimiento: '',
-    numeroTelefono: '',
-    tipoDocumento: 'CC',
-    numeroDocumento: '',
+    nombre: '', correo: '', contrasena: '', fechaNacimiento: '',
+    numeroTelefono: '', tipoDocumento: 'CC', numeroDocumento: '',
     genero: 'Masculino',
     // Datos del Organizador
-    razonSocial: '',
-    nit: '',
+    razonSocial: '', nit: '',
   });
 
   const validate = (step: number) => {
@@ -100,12 +161,11 @@ export const RegisterOrganizer: React.FC<Props> = ({ onBack }) => {
     const cumpleanos = new Date(fecha);
     let edad = hoy.getFullYear() - cumpleanos.getFullYear();
     const m = hoy.getMonth() - cumpleanos.getMonth();
-    if (m < 0 || (m === 0 && hoy.getDate() < cumpleanos.getDate())) {
-      edad--;
-    }
+    if (m < 0 || (m === 0 && hoy.getDate() < cumpleanos.getDate())) edad--;
     return edad;
   };
 
+  // 2. Modificamos el handleSubmit para integrar Stripe
   const handleSubmit = async () => {
     setServerError('');
     setSuccessMsg('');
@@ -129,48 +189,43 @@ export const RegisterOrganizer: React.FC<Props> = ({ onBack }) => {
         numeroDocumento: formData.numeroDocumento,
         edad: calcularEdad(formData.fechaNacimiento),
         genero: formData.genero,
-        perfil: {
-          nombre: "ORGANIZADOR" // El rol dentro del objeto perfil
-        }
+        perfil: { nombre: "ORGANIZADOR" }
       },
       razonSocial: formData.razonSocial,
       nit: formData.nit,
-      stripePaymentMethodId: "pm_card_visa" // Dato simulado por ahora para Stripe
+      stripePaymentMethodId: paymentMethodId // <--- AHORA ES EL ID REAL
     };
 
-    console.log("Enviando Organizador:", dataToBack);
+    console.log("Enviando Organizador con Pago:", dataToBack);
 
     try {
       await registerOrganizador(dataToBack);
-      setSuccessMsg('¡Organización registrada con éxito! Redirigiendo al login...');
-      setTimeout(() => {
-        navigate('/login');
-      }, 2500);
+      setSuccessMsg('¡Organización registrada y pago exitoso! Redirigiendo...');
+      setTimeout(() => navigate('/login'), 2500);
     } catch (error: any) {
       console.error('Error del backend:', error);
-      setServerError(
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        'Ocurrió un error al registrar. Revisa los datos o intenta nuevamente.'
-      );
+      setServerError(error.response?.data?.message || 'Error al registrar.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="animate-fade-in w-full">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <button
-          onClick={step === 1 ? onBack : prevStep}
-          className="text-sm text-gray-500 hover:text-[#1E5ADF] transition-colors"
-          disabled={isLoading}
-        >
-          ← {step === 1 ? 'Volver al inicio' : 'Paso anterior'}
-        </button>
-        <div className="text-right">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Paso 0{step}/03</span>
+    // 3. Envolvemos TODO el componente con Elements
+    <Elements stripe={stripePromise}>
+      <div className="animate-fade-in w-full">
+        {/* Header - SIN CAMBIOS */}
+        <div className="flex justify-between items-center mb-8">
+          <button
+            onClick={step === 1 ? onBack : prevStep}
+            className="text-sm text-gray-500 hover:text-[#1E5ADF] transition-colors"
+            disabled={isLoading}
+          >
+            ← {step === 1 ? 'Volver al inicio' : 'Paso anterior'}
+          </button>
+          <div className="text-right">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Paso 0{step}/03</span>
+          </div>
         </div>
       </div>
 
@@ -195,7 +250,13 @@ export const RegisterOrganizer: React.FC<Props> = ({ onBack }) => {
               <Input label="Número de documento*" value={formData.numeroDocumento} onChange={(e) => setFormData({ ...formData, numeroDocumento: e.target.value })} />
               {errors.numeroDocumento && <p className="text-red-500 text-xs font-medium mt-1">{errors.numeroDocumento}</p>}
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input label="Fecha de nacimiento*" type="date" value={formData.fechaNacimiento} onChange={(e) => setFormData({ ...formData, fechaNacimiento: e.target.value })} required />
+              <Select label="Género*" options={[{ value: 'Masculino', label: 'Masculino' }, { value: 'Femenino', label: 'Femenino' }, { value: 'Otro', label: 'Otro' }]} value={formData.genero} onChange={(e) => setFormData({ ...formData, genero: e.target.value })} />
+            </div>
+            <Button onClick={nextStep} variant="primary" className="mt-4">Continuar</Button>
           </div>
+        )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -204,10 +265,12 @@ export const RegisterOrganizer: React.FC<Props> = ({ onBack }) => {
             </div>
             <Select label="Género*" options={[{ value: 'Masculino', label: 'Masculino' }, { value: 'Femenino', label: 'Femenino' }, { value: 'Otro', label: 'Otro' }]} value={formData.genero} onChange={(e) => setFormData({ ...formData, genero: e.target.value })} />
           </div>
+        )}
 
-          <Button onClick={nextStep} variant="primary" className="mt-4">Continuar</Button>
-        </div>
-      )}
+        {/* PASO 3 - INTEGRACIÓN DE STRIPE SIN DAÑAR TU DISEÑO */}
+        {step === 3 && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900">Activa tu panel de control</h2>
 
       {/* PASO 2: Datos de Empresa y Cuenta */}
       {step === 2 && (
