@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 interface Props {
   submitEvent: (estado: 'BORRADOR' | 'PUBLICADO') => void;
