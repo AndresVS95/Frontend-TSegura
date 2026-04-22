@@ -4,6 +4,7 @@ import GeneralInfoForm from '../components/GeneralInfoForm';
 import VenueMap from '../components/VenueMap';
 import ZonesPublish from '../components/ZonesPublish';
 import { eventService } from '../services/eventService';
+import toast from 'react-hot-toast';
 
 export default function CrearEvento() {
   const navigate = useNavigate();
@@ -71,7 +72,7 @@ export default function CrearEvento() {
       // 3. Llamada al servicio centralizado
       await eventService.crearEvento(eventoDTO);
       
-      alert(`Evento ${estadoFinal === 'PUBLICADO' ? 'publicado con éxito 🎉' : 'guardado como borrador 💾'}`);
+      toast.success(`Evento ${estadoFinal === 'PUBLICADO' ? 'publicado con éxito 🎉' : 'guardado como borrador 💾'}`);
       
       // 4. Redirección automática post-login/creación
       navigate('/dashboard-organizer');
@@ -83,9 +84,9 @@ export default function CrearEvento() {
   const mensajeServidor = error.response?.data?.message || "Hubo un error al guardar.";
   
   if (mensajeServidor.includes("Ya existe un evento")) {
-    alert("❌ Error: Este recinto ya tiene un evento para esa fecha. Elige otro día.");
+    toast.error("❌ Error: Este recinto ya tiene un evento para esa fecha. Elige otro día.");
   } else {
-    alert(mensajeServidor);
+    toast.error(mensajeServidor);
   }
 }
   };

@@ -1,4 +1,5 @@
 import React from 'react';
+import toast from 'react-hot-toast';
 
 interface Props {
   submitEvent: (estado: 'BORRADOR' | 'PUBLICADO') => void;
@@ -13,7 +14,7 @@ export default function ZonesPublish({ submitEvent, prevStep, isLoading, formDat
   const validarYPublicar = () => {
     const tienePreciosCero = formData.zonas.some((z: any) => z.precio <= 0);
     if (tienePreciosCero) {
-      alert("⚠️ Atención: Tienes zonas con precio $0. Asegúrate de que esto sea correcto antes de publicar.");
+      toast.error("⚠️ Atención: Tienes zonas con precio $0. Asegúrate de que esto sea correcto antes de publicar.");
     }
     submitEvent('PUBLICADO');
   };

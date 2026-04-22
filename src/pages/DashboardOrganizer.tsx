@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import type { DecodedToken } from './Login'; 
 import { eventService } from '../services/eventService'; 
+import toast from 'react-hot-toast';
 
 const DashboardOrganizer: React.FC = () => {
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ const DashboardOrganizer: React.FC = () => {
   const handlePublicar = async (evento: any) => {
     // Verificación de seguridad: si no hay ID, no procedemos
     if (!evento.eventoId) {
-      alert("Error: El evento no tiene un ID válido. Asegúrate de que el Backend esté enviando 'eventoId'.");
+      toast.error("Error: El evento no tiene un ID válido. Asegúrate de que el Backend esté enviando 'eventoId'.");
       return;
     }
 
@@ -65,14 +66,14 @@ const DashboardOrganizer: React.FC = () => {
       await eventService.publicarEvento(evento.eventoId, evento);
       
       setMensajeError(null);
-      alert("¡Evento publicado con éxito! 🎉 El público ya puede ver las entradas.");
+      toast.success("¡Evento publicado con éxito! 🎉 El público ya puede ver las entradas.");
       
       // 2. REFRESCAMOS LA TABLA para ver el cambio de estado de inmediato
       await cargarDatos(); 
       
     } catch (error: any) {
       setMensajeError(error.message);
-      alert("No se pudo publicar: " + error.message);
+      toast.error("No se pudo publicar: " + error.message);
     }
   };
 
