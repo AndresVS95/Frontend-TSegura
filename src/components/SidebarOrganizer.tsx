@@ -1,12 +1,13 @@
 import { LayoutDashboard, CalendarDays, Ticket, Settings, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { tokenManager } from '../lib/tokenManager';
 
 export default function SidebarOrganizer() {
     const navigate = useNavigate();
 
     const handleLogout = () => {
-        sessionStorage.clear();
-        navigate('/login');
+        tokenManager.clearAll();
+        navigate('/login', { replace: true });
     };
 
     return (

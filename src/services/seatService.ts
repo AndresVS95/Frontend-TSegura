@@ -1,19 +1,20 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+import api from "./api";
+import type { Asiento } from "../types/event.types";
 
+/**
+ * Servicio de asientos — migrado de fetch manual a Axios.
+ * Ahora hereda el token automáticamente del interceptor en api.ts.
+ */
 export const seatService = {
-  // Traer los 100 asientos de una zona específica
-  obtenerAsientosPorZona: async (zonaId: number) => {
-    const response = await fetch(`${API_URL}/zonas/${zonaId}/asientos`);
-    if (!response.ok) throw new Error('Error al cargar los asientos');
-    return await response.json();
+  /** Traer los asientos de una zona específica */
+  obtenerAsientosPorZona: async (zonaId: number): Promise<Asiento[]> => {
+    const response = await api.get(`/api/zonas/${zonaId}/asientos`);
+    return response.data;
   },
 
-  // Reservar un asiento temporalmente
-  reservarAsiento: async (asientoId: number) => {
-    const response = await fetch(`${API_URL}/asientos/${asientoId}/reservar`, {
-      method: 'POST'
-    });
-    if (!response.ok) throw new Error('El asiento ya fue tomado por otra persona');
-    return await response.json();
-  }
+  /** Reservar un asiento temporalmente */
+  reservarAsiento: async (asientoId: number): Promise<Asiento> => {
+    const response = await api.post(`/api/asientos/${asientoId}/reservar`);
+    return response.data;
+  },
 };

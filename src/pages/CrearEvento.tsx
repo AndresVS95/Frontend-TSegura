@@ -5,6 +5,7 @@ import VenueMap from '../components/VenueMap';
 import ZonesPublish from '../components/ZonesPublish';
 import { eventService } from '../services/eventService';
 import toast from 'react-hot-toast';
+import { tokenManager } from '../lib/tokenManager';
 
 export default function CrearEvento() {
   const navigate = useNavigate();
@@ -26,8 +27,7 @@ export default function CrearEvento() {
   });
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.clear();
+    tokenManager.clearAll();
     navigate('/login', { replace: true });
   };
 

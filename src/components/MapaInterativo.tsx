@@ -1,5 +1,5 @@
 // src/components/MapaInteractivo.tsx (Actualizado para el Comprador)
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 // Interfaz para conocer la estructura de las sillas que vienen de la API
 interface Silla {

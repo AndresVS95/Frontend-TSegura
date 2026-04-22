@@ -4,14 +4,11 @@ import { jwtDecode } from 'jwt-decode';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { loginUsuario } from '../services/authService';
+import { tokenManager } from '../lib/tokenManager';
+import type { DecodedToken } from '../types/auth.types';
 
-export interface DecodedToken {
-    nombre_completo: string;
-    perfil: string;
-    sub: string;
-    iat: number;
-    exp: number;
-}
+// Re-export para compatibilidad con archivos que importan desde aquí
+export type { DecodedToken } from '../types/auth.types';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -37,10 +34,9 @@ export const Login: React.FC = () => {
                 throw new Error("No se recibió un token válido del servidor");
             }
 
-            localStorage.setItem('token', token);
+            tokenManager.set(token);
 
             const decoded = jwtDecode<DecodedToken>(token);
-            console.log("¡Bienvenido!", decoded.nombre_completo);
 
             if (decoded.perfil === 'ORGANIZADOR') {
                 navigate('/dashboard-organizer', { replace: true });
