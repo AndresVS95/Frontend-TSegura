@@ -40,6 +40,20 @@ export const eventService = {
     return response.data;
   },
 
+  obtenerEventosPublicados: async (query: string = '') => {
+    const url = query 
+      ? `/api/eventos/publicados?q=${encodeURIComponent(query)}` 
+      : `/api/eventos/publicados`;
+
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  obtenerEventoPorId: async (id: string | number) => {
+    const response = await api.get(`/api/eventos/${id}`);
+    return response.data;
+  },
+
   /** Obtener datos de un evento específico (GET /api/eventos/:id) */
   obtenerDatosEvento: async (eventoId: string | number): Promise<Evento> => {
     const response = await api.get(`/api/eventos/${eventoId}`);

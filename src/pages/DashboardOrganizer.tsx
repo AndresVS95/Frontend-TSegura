@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { tokenManager } from '../lib/tokenManager';
 import { eventService } from '../services/eventService';
 import type { Evento } from '../types/event.types';
+import toast from 'react-hot-toast';
 
 /**
  * Dashboard del Organizador.
@@ -42,18 +43,18 @@ const DashboardOrganizer: React.FC = () => {
   // Tarea HU-021: Función para publicar un borrador
   const handlePublicar = async (evento: Evento) => {
     if (!evento.eventoId) {
-      alert("Error: El evento no tiene un ID válido.");
+      toast.error("Error: El evento no tiene un ID válido. Asegúrate de que el Backend esté enviando 'eventoId'.");
       return;
     }
 
     try {
       await eventService.publicarEvento(evento.eventoId, evento);
       setMensajeError(null);
-      alert("¡Evento publicado con éxito! 🎉 El público ya puede ver las entradas.");
-      await cargarDatos();
+      toast.success("¡Evento publicado con éxito! 🎉 El público ya puede ver las entradas.");
+      await cargarDatos(); 
     } catch (error: any) {
       setMensajeError(error.message);
-      alert("No se pudo publicar: " + error.message);
+      toast.error("No se pudo publicar: " + error.message);
     }
   };
 
