@@ -7,11 +7,13 @@ import DashboardBuyer from './pages/Home';
 import PrivateRoute from './components/PrivateRoute';
 import CrearEvento from './pages/CrearEvento';
 import { ComprarBoletos } from './pages/ComprarBoletos';
+import  CatalogoEventos  from './pages/CatalogoEventos';
 
 function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<CatalogoEventos />} />
         {/* Si el usuario entra a la raíz, lo enviamos al login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 

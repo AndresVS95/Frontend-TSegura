@@ -76,6 +76,31 @@ export const eventService = {
   }
 
   return await response.json();
+  
+},
+obtenerEventosPublicados: async (query: string = '') => {
+    const url = query 
+      ? `http://localhost:8080/api/eventos/publicados?q=${encodeURIComponent(query)}` 
+      : `http://localhost:8080/api/eventos/publicados`;
+
+    console.log("Llamando a la URL:", url); 
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (!response.ok) throw new Error('Error al conectar con el servidor');
+    return await response.json();
+  },
+
+  
+  obtenerEventoPorId: async (id: string | number) => {
+  const response = await fetch(`${API_URL}/${id}`);
+  if (!response.ok) throw new Error('Error al cargar los detalles del evento');
+  return await response.json();
 },
 
 
@@ -107,4 +132,6 @@ export const eventService = {
     if (!response.ok) throw new Error('Error al cargar el archivo SVG');
     return await response.text(); // fetch devuelve texto para el SVG, no JSON
   }
+
+  
 };
