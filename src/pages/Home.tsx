@@ -1,19 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { tokenManager } from '../lib/tokenManager';
+import { eventService } from '../services/eventService';
+import type { Evento } from '../types/event.types';
 
 /**
  * Dashboard del Comprador.
- * 
- * NOTA SENIOR: Ya no necesitamos verificar auth aquí porque
- * PrivateRoute ya lo hace antes de renderizar este componente.
- * Antes este archivo tenía un useEffect duplicado de ~25 líneas
- * que hacía exactamente lo mismo que PrivateRoute.
  */
 const DashboardBuyer: React.FC = () => {
   const navigate = useNavigate();
   const user = tokenManager.getUser();
   const nombre = user?.nombre_completo ?? 'Usuario';
+
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const cargarEventos = async () => {
+      try {
+        const data = await eventService.obtenerEventosPublicados();
+        setEventos(data);
+      } catch (error) {
+        console.error("Error al cargar eventos:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    cargarEventos();
+  }, []);
 
   const handleLogout = () => {
     tokenManager.clearAll();
@@ -78,33 +92,64 @@ const DashboardBuyer: React.FC = () => {
           ))}
         </div>
 
-        {/* Grid de Eventos (Placeholder Estético) */}
+        {/* Grid de Eventos */}
         <h3 className="text-2xl font-black text-[#03292e] mb-8 px-2">Eventos Destacados</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[1, 2, 3].map((item) => (
-            <div key={item} className="bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all group cursor-pointer">
-              <div className="h-48 bg-gray-200 relative">
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-lg text-xs font-bold text-[#1E5ADF]">
-                  Próximamente
+        
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map(n => <div key={n} className="h-72 bg-gray-200 animate-pulse rounded-[2.5rem]" />)}
+          </div>
+        ) : eventos.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm">
+            <span className="text-5xl mb-4 block">📭</span>
+            <h4 className="text-xl font-bold text-gray-800 mb-2">No hay eventos publicados aún</h4>
+            <p className="text-gray-500">Vuelve más tarde para descubrir nuevas experiencias.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {eventos.map((evento, index) => {
+              const idReal = evento.eventoId || (evento as any).id;
+              return (
+                <div 
+                  key={idReal ?? index} 
+                  className="bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all group cursor-pointer flex flex-col"
+                  onClick={() => navigate(`/detalles/${idReal}`)}
+                >
+                  <div className="h-48 bg-gray-200 relative overflow-hidden">
+                    {evento.urlImagen && evento.urlImagen !== "https://ejemplo.com/imagen.jpg" ? (
+                      <img src={evento.urlImagen} alt={evento.nombre} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-100 to-[#1E5ADF]/20 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
+                         <span className="text-5xl drop-shadow-md">🎫</span>
+                      </div>
+                    )}
+                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-lg text-xs font-bold text-[#1E5ADF]">
+                      Próximamente
+                    </div>
+                  </div>
+                  <div className="p-6 flex-1 flex flex-col">
+                    <p className="text-[#1E5ADF] font-bold text-xs uppercase tracking-widest mb-2">
+                      {evento.tipoEventoId === 1 ? 'Concierto' : 'Evento'}
+                    </p>
+                    <h4 className="text-xl font-bold text-[#03292e] mb-2 group-hover:text-[#1E5ADF] transition-colors truncate">
+                      {evento.nombre}
+                    </h4>
+                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
+                      <span>📍 {(evento as any).nombreRecinto || 'Popayán, Cauca'}</span>
+                      <span>•</span>
+                      <span>📅 {evento.fechaEvento}</span>
+                    </div>
+                    <div className="mt-auto pt-4">
+                      <button className="w-full py-3 bg-gray-50 text-[#03292e] font-bold rounded-2xl group-hover:bg-[#1E5ADF] group-hover:text-white transition-all">
+                        Ver Entradas
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="p-6">
-                <p className="text-[#1E5ADF] font-bold text-xs uppercase tracking-widest mb-2">Concierto</p>
-                <h4 className="text-xl font-bold text-[#03292e] mb-2 group-hover:text-[#1E5ADF] transition-colors">
-                  Nombre del Evento {item}
-                </h4>
-                <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
-                  <span>📍 Popayán, Cauca</span>
-                  <span>•</span>
-                  <span>📅 25 Abr</span>
-                </div>
-                <button className="w-full py-3 bg-gray-50 text-[#03292e] font-bold rounded-2xl group-hover:bg-[#1E5ADF] group-hover:text-white transition-all">
-                  Ver Entradas
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </main>
     </div>
   );

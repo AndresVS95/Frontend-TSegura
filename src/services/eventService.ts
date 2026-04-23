@@ -49,12 +49,19 @@ export const eventService = {
   },
 
   obtenerEventosPublicados: async (query: string = '') => {
-    const url = query 
-      ? `/api/eventos/publicados?q=${encodeURIComponent(query)}` 
-      : `/api/eventos/publicados`;
-
-    const response = await api.get(url);
-    return response.data;
+    // Solución temporal: Como el backend no tiene el endpoint /publicados, 
+    // traemos todos y filtramos en el frontend para no bloquear el desarrollo.
+    const response = await api.get('/api/eventos');
+    let publicados = response.data.filter((e: any) => String(e.estado).toUpperCase() === 'PUBLICADO');
+    
+    if (query) {
+      const q = query.toLowerCase();
+      publicados = publicados.filter((e: any) => 
+        e.nombre.toLowerCase().includes(q) || 
+        (e.descripcion && e.descripcion.toLowerCase().includes(q))
+      );
+    }
+    return publicados;
   },
 
   obtenerEventoPorId: async (id: string | number) => {
