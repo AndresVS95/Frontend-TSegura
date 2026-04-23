@@ -129,12 +129,13 @@ const DashboardOrganizer: React.FC = () => {
                       <div className="text-xs text-gray-500">{evento.fechaEvento} - {evento.horaEvento}</div>
                     </td>
                     <td className="px-6 py-4">
+                      {/* Solución al Bug de la bola vacía: Si el backend no envía 'estado', mostramos un fallback */}
                       <span className={`px-3 py-1 text-xs font-bold rounded-full ${
-                        evento.estado === 'PUBLICADO' ? 'bg-green-100 text-green-800' : 
-                        evento.estado === 'BORRADOR' ? 'bg-yellow-100 text-yellow-800' : 
-                        'bg-red-100 text-red-800'
+                        String(evento.estado).toUpperCase() === 'PUBLICADO' ? 'bg-green-100 text-green-800' : 
+                        String(evento.estado).toUpperCase() === 'BORRADOR' ? 'bg-yellow-100 text-yellow-800' : 
+                        'bg-gray-100 text-gray-800'
                       }`}>
-                        {evento.estado}
+                        {evento.estado ? String(evento.estado).toUpperCase() : 'SIN ESTADO'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
