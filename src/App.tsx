@@ -8,6 +8,7 @@ import PrivateRoute from './components/PrivateRoute';
 import CrearEvento from './pages/CrearEvento';
 import { ComprarBoletos } from './pages/ComprarBoletos';
 import  CatalogoEventos  from './pages/CatalogoEventos';
+import EventoDetalle from './components/EventoDetalle';
 
 function App() {
   return (
@@ -62,7 +63,12 @@ function App() {
         />
 
         {/* Ruta comodín (opcional): si escribe una URL que no existe, lo enviamos al login */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} 
+        />
+
+        {/* Ruta para ver detalles de un evento específico */}
+       <Route path="/evento/:id" element={<EventoDetalle />}
+        />    
       </Routes>
     </Router>
   );
