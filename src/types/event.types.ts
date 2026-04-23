@@ -8,10 +8,12 @@ export type EstadoEvento = 'BORRADOR' | 'PUBLICADO' | 'CANCELADO' | 'FINALIZADO'
 
 /** Zona dentro de un evento (VIP, General, Plata, etc.) */
 export interface Zona {
-  nombre_zona: string;
+  zonaId: number;
+  nombreZona: string;
   capacidad: number;
   precio: number;
-  asientos_numerados: boolean;
+  asientosNumerados: boolean;
+  cuposDisponibles?: number;
 }
 
 /** Evento tal como lo devuelve el backend (GET /api/eventos) */

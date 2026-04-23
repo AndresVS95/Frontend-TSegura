@@ -3,10 +3,10 @@ import React, { useEffect, useState, useRef } from 'react'; // IMPORTANTE: useRe
 import { eventService } from '../services/eventService';
 
 interface Zona {
-  nombre_zona: string;
+  nombreZona: string;
   capacidad: number;
   precio: number;
-  asientos_numerados: boolean;
+  asientosNumerados: boolean;
 }
 
 // Colores por ZONA para el Organizador (Definir precios)
@@ -51,11 +51,11 @@ const VenueMap: React.FC<VenueMapProps> = ({ formData, setFormData, nextStep, pr
       if (mapaSvg && formData.zonas && formData.zonas.length > 0) {
         formData.zonas.forEach((zona: Zona) => {
           // Buscamos el color de la leyenda
-          const color = ZONE_COLORS[zona.nombre_zona.toUpperCase()] || '#D1D5DB';
+          const color = ZONE_COLORS[zona.nombreZona.toUpperCase()] || '#D1D5DB';
           
           // Buscamos el ID del GRUPO en el SVG (Ej: id="VIP")
-          const idBuscado = zona.nombre_zona.toUpperCase(); 
-          const elementoGrupoZona = document.getElementById(idBuscado) || document.getElementById(zona.nombre_zona.toLowerCase());
+          const idBuscado = zona.nombreZona.toUpperCase(); 
+          const elementoGrupoZona = document.getElementById(idBuscado) || document.getElementById(zona.nombreZona.toLowerCase());
           
           if (elementoGrupoZona) {
             // Buscamos todos los elementos dibujables dentro de ese grupo y los pintamos enteros
@@ -113,12 +113,12 @@ const VenueMap: React.FC<VenueMapProps> = ({ formData, setFormData, nextStep, pr
           <p className="text-gray-600">Asigna el precio para cada zona.</p>
           
           {formData.zonas && formData.zonas.map((zona: Zona, index: number) => {
-            const color = ZONE_COLORS[zona.nombre_zona.toUpperCase()] || '#E5E7EB';
+            const color = ZONE_COLORS[zona.nombreZona.toUpperCase()] || '#E5E7EB';
             
             return (
               <div key={index} className="bg-white p-5 rounded-xl border shadow-sm" style={{ borderColor: `${color}60` }}>
                 <div className="flex justify-between items-center mb-2">
-                  <h4 className="text-lg font-bold" style={{ color: color }}>Zona {zona.nombre_zona}</h4>
+                  <h4 className="text-lg font-bold" style={{ color: color }}>Zona {zona.nombreZona}</h4>
                   <p className="text-sm text-gray-500">Capacidad: {zona.capacidad}</p>
                 </div>
                 

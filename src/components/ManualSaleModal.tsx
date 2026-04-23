@@ -15,7 +15,7 @@ export const ManualSaleModal: React.FC<ManualSaleModalProps> = ({ isOpen, onClos
   const [formData, setFormData] = useState({
     nombreComprador: '',
     cedulaComprador: '',
-    zonaNombre: '',
+    zonaEventoId: '',
     cantidad: 1,
     metodoPago: 'EFECTIVO'
   });
@@ -28,7 +28,7 @@ export const ManualSaleModal: React.FC<ManualSaleModalProps> = ({ isOpen, onClos
         toast.error("El nombre y la cédula del comprador son obligatorios.");
         return;
     }
-    if (!formData.zonaNombre) {
+    if (!formData.zonaEventoId) {
         toast.error("Debes seleccionar una zona.");
         return;
     }
@@ -37,13 +37,20 @@ export const ManualSaleModal: React.FC<ManualSaleModalProps> = ({ isOpen, onClos
 
     try {
       // LLamada al backend para asentar la venta manual
-      // Al ser organizador, bypass el carrito y asienta directamente
-      await eventService.registrarVentaManual(evento.eventoId, formData);
+      // El backend espera zonaEventoId como Integer
+      const payload = {
+        ...formData,
+        zonaEventoId: Number(formData.zonaEventoId),
+        cantidad: Number(formData.cantidad)
+      };
+
+      await eventService.registrarVentaManual(payload);
       toast.success("✅ Venta registrada y NFT generado en Blockchain.");
       onSaleSuccess(); // Refrescar el dashboard
       onClose(); // Cerrar modal
     } catch (error: any) {
-      toast.error(error.message || "Error al registrar la venta manual.");
+      console.error("Error en venta manual:", error);
+      toast.error(error.response?.data?.message || error.message || "Error al registrar la venta manual.");
     } finally {
       setLoading(false);
     }
@@ -102,15 +109,15 @@ export const ManualSaleModal: React.FC<ManualSaleModalProps> = ({ isOpen, onClos
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Zona</label>
               <select
-                name="zonaNombre"
-                value={formData.zonaNombre}
+                name="zonaEventoId"
+                value={formData.zonaEventoId}
                 onChange={handleChange}
                 required
                 className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-[#1E5ADF] outline-none"
               >
                 <option value="">Selecciona Zona...</option>
                 {evento.zonas?.map((zona, idx) => (
-                    <option key={idx} value={zona.nombre_zona}>{zona.nombre_zona} - ${zona.precio}</option>
+                    <option key={idx} value={zona.zonaId}>{zona.nombreZona} - ${zona.precio}</option>
                 ))}
               </select>
             </div>
@@ -154,7 +161,7 @@ export const ManualSaleModal: React.FC<ManualSaleModalProps> = ({ isOpen, onClos
             <button 
               type="submit" 
               disabled={loading}
-              className={`px-8 py-3 font-bold text-white bg-[#1E5ADF] hover:bg-blue-700 rounded-xl shadow-lg transition-colors flex items-center justify-center ${loading ? 'opacity-50' : ''}`}
+              className={`px-8 py-3 font-bold text-white bg-[#1E5ADF] hover:bg-blue-700 rounded-xl shadow-lg transition-all flex items-center justify-center ${loading ? 'opacity-50' : ''}`}
             >
               {loading ? 'Registrando...' : 'Emitir Boleto NFT'}
             </button>

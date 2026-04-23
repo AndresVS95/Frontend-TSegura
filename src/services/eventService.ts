@@ -41,10 +41,9 @@ export const eventService = {
   },
 
   /** Registrar Venta Manual (RF-O-10) */
-  registrarVentaManual: async (eventoId: number, ventaData: any): Promise<any> => {
-    // Si el backend aún no tiene esta ruta lista, podemos comentarla
-    // para que la UI funcione visualmente
-    const response = await api.post(`/api/eventos/${eventoId}/venta-manual`, ventaData);
+  registrarVentaManual: async (ventaData: any): Promise<any> => {
+    // El backend espera VentaManualDTO en /api/ventas/manual
+    const response = await api.post("/api/ventas/manual", ventaData);
     return response.data;
   },
 

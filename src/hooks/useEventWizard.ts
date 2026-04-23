@@ -21,10 +21,10 @@ const buildEventoDTO = (formData: any, estadoFinal: 'BORRADOR' | 'PUBLICADO') =>
     tipoEventoId: 1, 
     estado: estadoFinal, 
     zonas: formData.zonas.map((zona: any) => ({
-      nombreZona: zona.nombre_zona,
+      nombreZona: zona.nombreZona,
       capacidad: Number(zona.capacidad) || 0,
       precio: Number(zona.precio) || 0, 
-      asientosNumerados: Boolean(zona.asientos_numerados),
+      asientosNumerados: Boolean(zona.asientosNumerados),
       cuposDisponibles: Number(zona.capacidad) || 0
     }))
   };
@@ -42,9 +42,9 @@ export const useEventWizard = () => {
     descripcion: '',
     recinto_id: 1, 
     zonas: [
-      { nombre_zona: 'VIP', capacidad: 20, precio: 0, asientos_numerados: true },
-      { nombre_zona: 'PLATA', capacidad: 20, precio: 0, asientos_numerados: true },
-      { nombre_zona: 'General', capacidad: 60, precio: 0, asientos_numerados: true }
+      { nombreZona: 'VIP', capacidad: 20, precio: 0, asientosNumerados: true },
+      { nombreZona: 'PLATA', capacidad: 20, precio: 0, asientosNumerados: true },
+      { nombreZona: 'General', capacidad: 60, precio: 0, asientosNumerados: true }
     ]
   });
 
