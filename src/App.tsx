@@ -9,6 +9,7 @@ import PrivateRoute from './components/PrivateRoute';
 import CrearEvento from './pages/CrearEvento';
 import { ComprarBoletos } from './pages/ComprarBoletos';
 import  CatalogoEventos  from './pages/CatalogoEventos';
+import DetalleEventoOrg from './pages/DetalleEventoOrg';
 
 function App() {
   return (
@@ -40,6 +41,16 @@ function App() {
           element={
             <PrivateRoute allowedRole="ORGANIZADOR">
               <DashboardOrganizer />
+            </PrivateRoute>
+          }
+        />
+
+        {/* Ruta Protegida: Panel Detalles del Evento (Organizador) */}
+        <Route
+          path="/detalles/:id"
+          element={
+            <PrivateRoute allowedRole="ORGANIZADOR">
+              <DetalleEventoOrg />
             </PrivateRoute>
           }
         />

@@ -42,13 +42,15 @@ const DashboardOrganizer: React.FC = () => {
 
   // Tarea HU-021: Función para publicar un borrador
   const handlePublicar = async (evento: Evento) => {
-    if (!evento.eventoId) {
+    const idReal = evento.eventoId || (evento as any).id;
+    
+    if (!idReal) {
       toast.error("Error: El evento no tiene un ID válido. Asegúrate de que el Backend esté enviando 'eventoId'.");
       return;
     }
 
     try {
-      await eventService.publicarEvento(evento.eventoId, evento);
+      await eventService.publicarEvento(idReal, evento);
       setMensajeError(null);
       toast.success("¡Evento publicado con éxito! 🎉 El público ya puede ver las entradas.");
       await cargarDatos(); 
@@ -118,8 +120,10 @@ const DashboardOrganizer: React.FC = () => {
                   <td colSpan={4} className="px-6 py-10 text-center text-gray-500 italic">No tienes eventos registrados aún.</td>
                 </tr>
               ) : (
-                eventos.map((evento, index) => (
-                  <tr key={evento.eventoId ?? index} className="hover:bg-gray-50 transition-colors">
+                eventos.map((evento, index) => {
+                  const idReal = evento.eventoId || (evento as any).id;
+                  return (
+                  <tr key={idReal ?? index} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="text-sm font-bold text-gray-900">{evento.nombre}</div>
                       <div className="text-xs text-gray-500">{evento.fechaEvento} - {evento.horaEvento}</div>
@@ -150,14 +154,15 @@ const DashboardOrganizer: React.FC = () => {
                       )}
 
                       <button 
-                        onClick={() => navigate(`/detalles/${evento.eventoId}`)} 
+                        onClick={() => navigate(`/detalles/${idReal}`)} 
                         className="text-[#1E5ADF] font-bold text-sm hover:underline"
                       >
                         Ver detalles
                       </button>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

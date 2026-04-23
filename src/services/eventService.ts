@@ -40,6 +40,14 @@ export const eventService = {
     return response.data;
   },
 
+  /** Registrar Venta Manual (RF-O-10) */
+  registrarVentaManual: async (eventoId: number, ventaData: any): Promise<any> => {
+    // Si el backend aún no tiene esta ruta lista, podemos comentarla
+    // para que la UI funcione visualmente
+    const response = await api.post(`/api/eventos/${eventoId}/venta-manual`, ventaData);
+    return response.data;
+  },
+
   obtenerEventosPublicados: async (query: string = '') => {
     const url = query 
       ? `/api/eventos/publicados?q=${encodeURIComponent(query)}` 
