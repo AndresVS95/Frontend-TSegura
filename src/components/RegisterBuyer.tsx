@@ -11,8 +11,16 @@ interface Props {
 
 // ─── SUB-COMPONENTES ───────────────────────────────────────────────────────
 
-const RegistrationHeader = () => (
+const RegistrationHeader = ({ onBack }: { onBack: () => void }) => (
     <header className="mb-10 text-left">
+        <button
+            type="button"
+            onClick={onBack}
+            className="text-xs font-bold text-gray-400 hover:text-blue-600 flex items-center gap-1 mb-4 transition-colors uppercase tracking-widest group"
+        >
+            <span className="text-lg group-hover:-translate-x-1 transition-transform">‹</span> 
+            Volver al inicio
+        </button>
         <h2 className="text-2xl font-bold text-gray-900 leading-tight">Crear cuenta</h2>
         <p className="text-sm text-gray-600 mt-1">
             ¿Ya tienes una cuenta?{' '}
@@ -55,7 +63,7 @@ export const RegisterBuyer: React.FC<Props> = ({ onBack }) => {
 
     return (
         <div className="animate-fade-in max-w-xl mx-auto px-2">
-            <RegistrationHeader />
+            <RegistrationHeader onBack={onBack} />
 
             <form onSubmit={handleSubmit} className="space-y-6">
 
