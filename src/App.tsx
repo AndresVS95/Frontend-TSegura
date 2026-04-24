@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
@@ -16,7 +17,9 @@ import MisBoletos from './pages/MisBoletos';
 
 function App() {
   return (
-    <Router>
+    <>
+      <Toaster position="top-center" reverseOrder={false} toastOptions={{ duration: 4000 }} />
+      <Router>
       <Routes>
 
         <Route path="/" element={<CatalogoEventos />} />
@@ -86,6 +89,7 @@ function App() {
         <Route path="/my-tickets" element={<MisBoletos />} />
       </Routes>
     </Router>
+    </>
   );
 }
 

@@ -1,38 +1,30 @@
 import { Navigate } from "react-router-dom";
 import type { ReactNode } from "react";
-import { jwtDecode } from "jwt-decode";
-import type { DecodedToken } from "../pages/Login";
+import { tokenManager } from "../lib/tokenManager";
+import type { UserRole } from "../types/auth.types";
 
 interface Props {
     children: ReactNode;
-    allowedRole?: string; // Nuevo: Para pedir un rol específico
+    allowedRole?: UserRole;
 }
 
+
 const PrivateRoute = ({ children, allowedRole }: Props) => {
-    const token = localStorage.getItem("token");
+    const user = tokenManager.getUser();
 
-    // 1. Si no hay nada en el cajón, al login
-    if (!token) {
+    // 1. Si no hay token o está expirado, al login
+    if (!user) {
         return <Navigate to="/login" replace />;
     }
 
-    try {
-        const decoded = jwtDecode<DecodedToken>(token);
-
-        // 2. Si pedimos un rol (ej: COMPRADOR) y el token tiene otro, al login
-        if (allowedRole && decoded.perfil !== allowedRole) {
-            console.warn(`Acceso denegado: Se requiere ${allowedRole}`);
-            return <Navigate to="/login" replace />;
-        }
-
-        // 3. Todo bien, adelante
-        return <>{children}</>;
-
-    } catch (error) {
-        // Token corrupto o mal formado
-        localStorage.removeItem("token");
+    // 2. Si se requiere un rol específico y no coincide, al login
+    if (allowedRole && user.perfil !== allowedRole) {
+        console.warn(`Acceso denegado: Se requiere ${allowedRole}, el usuario tiene ${user.perfil}`);
         return <Navigate to="/login" replace />;
     }
+
+    // 3. Todo bien, adelante
+    return <>{children}</>;
 };
 
 export default PrivateRoute;

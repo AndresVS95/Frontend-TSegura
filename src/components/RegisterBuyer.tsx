@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from './Input';
 import { Button } from './Button';
-import { registerUsuario } from '../services/authService'; // Importamos el servicio
+import { registerUsuario } from '../services/authService';
+import toast from 'react-hot-toast';
 
 interface Props {
     onBack: () => void;
@@ -96,11 +97,11 @@ export const RegisterBuyer: React.FC<Props> = ({ onBack }) => {
             // Ahora TypeScript debería estar feliz porque el objeto tiene TODO
             await registerUsuario(datosParaBackend);
 
-            alert("¡Registro exitoso!");
+            toast.success("¡Registro exitoso!");
             navigate('/login');
         } catch (error) {
             console.error("Error en el registro:", error);
-            alert("Hubo un problema al crear la cuenta.");
+            toast.error("Hubo un problema al crear la cuenta.");
         } finally {
             setLoading(false);
         }

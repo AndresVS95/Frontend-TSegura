@@ -1,23 +1,61 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+import type { DecodedToken } from './Login';
 import { eventService } from '../services/eventService';
+// import SidebarBuyer from '../components/SidebarBuyer'; // Si tienes uno específico
 
-export const DashboardBuyer: React.FC = () => {
+const DashboardBuyer: React.FC = () => {
   const navigate = useNavigate();
+  const [nombre, setNombre] = useState('');
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [eventos, setEventos] = useState<any[]>([]);
+  const [isLoadingEventos, setIsLoadingEventos] = useState(false);
 
   useEffect(() => {
-    const fetchEventos = async () => {
-      try {
-        // Traemos los eventos reales de la base de datos de JG
-        const data = await eventService.obtenerEventosPublicados();
-        setEventos(data);
-      } catch (error) {
-        console.error("Error al traer eventos reales", error);
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    try {
+      const decoded = jwtDecode<DecodedToken>(token);
+
+      // IMPORTANTE: Aquí filtramos por el rol de Comprador
+      // Verifica si en tu base de datos es 'COMPRADOR', 'CLIENTE' o 'USER'
+      if (decoded.perfil !== 'COMPRADOR') {
+        navigate('/login', { replace: true });
+        return;
       }
-    };
-    fetchEventos();
-  }, []);
+
+      setNombre(decoded.nombre_completo);
+      setIsAuthorized(true);
+
+      // Cargar eventos publicados
+      setIsLoadingEventos(true);
+      eventService.obtenerEventosPublicados()
+        .then((data) => setEventos(data))
+        .catch((error) => {
+          console.error('Error al cargar eventos:', error);
+          setEventos([]); // Si hay error, mostrar lista vacía
+        })
+        .finally(() => setIsLoadingEventos(false));
+
+    } catch (error) {
+      localStorage.removeItem('token');
+      navigate('/login', { replace: true });
+    }
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.clear();
+    navigate('/login', { replace: true });
+  };
+
+  if (!isAuthorized) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -27,8 +65,8 @@ export const DashboardBuyer: React.FC = () => {
            <span className="mr-1">💳</span> TSegura.
         </div>
         <div className="flex items-center gap-4 text-sm font-medium">
-          <span className="text-gray-500">Hola, <span className="font-bold text-black">comprador</span></span>
-          <button onClick={() => navigate('/login')} className="text-red-500 font-bold hover:underline">Cerrar Sesión</button>
+          <span className="text-gray-500">Hola, <span className="font-bold text-black">{nombre}</span></span>
+          <button onClick={handleLogout} className="text-red-500 font-bold hover:underline">Cerrar Sesión</button>
         </div>
       </nav>
 
@@ -65,29 +103,39 @@ export const DashboardBuyer: React.FC = () => {
       {/* GRID DE EVENTOS REALES */}
       <div className="max-w-7xl mx-auto px-8 pb-20">
         <h2 className="text-2xl font-black mb-8 text-gray-900">Eventos Destacados</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {eventos.map((evento) => (
-            <div key={evento.eventoId} className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100 flex flex-col group hover:shadow-xl transition-all duration-300">
-              <div className="h-56 bg-gray-100 relative">
-                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black text-[#1E5ADF]">PRÓXIMAMENTE</div>
-              </div>
-              <div className="p-8">
-                <span className="text-[#1E5ADF] text-[10px] font-black tracking-widest uppercase">CONCIERTO</span>
-                <h3 className="text-xl font-black text-gray-900 mt-1 mb-2">{evento.nombre}</h3>
-                <div className="flex items-center text-gray-400 text-xs gap-4 mb-8">
-                  <span>📍 Popayán, Cauca</span>
-                  <span>📅 {evento.fechaEvento}</span>
+        {isLoadingEventos ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">Cargando eventos...</p>
+          </div>
+        ) : eventos.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No hay eventos disponibles en este momento</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {eventos.map((evento) => (
+              <div key={evento.eventoId} className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100 flex flex-col group hover:shadow-xl transition-all duration-300">
+                <div className="h-56 bg-gray-100 relative">
+                   <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black text-[#1E5ADF]">PRÓXIMAMENTE</div>
                 </div>
-                <button 
-                  onClick={() => navigate(`/evento/${evento.eventoId}`)}
-                  className="w-full py-4 bg-gray-50 text-gray-900 rounded-2xl font-black hover:bg-[#0f172a] hover:text-white transition-all border border-gray-100"
-                >
-                  Ver Entradas
-                </button>
+                <div className="p-8">
+                  <span className="text-[#1E5ADF] text-[10px] font-black tracking-widest uppercase">CONCIERTO</span>
+                  <h3 className="text-xl font-black text-gray-900 mt-1 mb-2">{evento.nombre}</h3>
+                  <div className="flex items-center text-gray-400 text-xs gap-4 mb-8">
+                    <span>📍 Popayán, Cauca</span>
+                    <span>📅 {evento.fechaEvento}</span>
+                  </div>
+                  <button 
+                    onClick={() => navigate(`/evento/${evento.eventoId}`)}
+                    className="w-full py-4 bg-gray-50 text-gray-900 rounded-2xl font-black hover:bg-[#0f172a] hover:text-white transition-all border border-gray-100"
+                  >
+                    Ver Entradas
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

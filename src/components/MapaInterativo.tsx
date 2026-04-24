@@ -1,4 +1,6 @@
+
 import React from 'react';
+
 
 // Estas "Props" permiten que el mapa se comporte diferente según dónde se use
 interface MapaInteractivoProps {
