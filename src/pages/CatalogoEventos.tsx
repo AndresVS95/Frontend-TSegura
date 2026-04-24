@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { eventService } from '../services/eventService';
 import EventCard from '../components/EventCard';
-import NoResults from '../components/NoResults'; // Nuevo componente
+import NoResults from '../components/NoResults';
 import EmptyCatalog from '../components/EmptyCatalog';
 
 const CatalogoEventos: React.FC = () => {
+  const navigate = useNavigate();
   const [eventos, setEventos] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -40,20 +42,23 @@ const CatalogoEventos: React.FC = () => {
             Próximos <span className="text-[#1E5ADF]">Eventos</span>
           </h2>
 
-          {/* BARRA DE BÚSQUEDA ESTILIZADA */}
-          <div className="relative max-w-xl group">
-            <span className="absolute inset-y-0 left-5 flex items-center text-gray-400 group-focus-within:text-[#1E5ADF] transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </span>
-            <input 
-              type="text"
-              placeholder="¿Qué quieres ver hoy? (Ej: Rock, Teatro...)"
-              className="w-full pl-14 pr-6 py-5 rounded-[2rem] border-2 border-transparent bg-white shadow-xl shadow-gray-100 outline-none focus:border-[#1E5ADF] transition-all text-lg font-medium text-gray-800 placeholder:text-gray-300"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          {/* BARRA DE BÚSQUEDA MEJORADA */}
+          <div className="mb-12 max-w-xl">
+            <div className="relative flex items-center w-full h-14 rounded-full border-2 border-[#1E5ADF] bg-white overflow-hidden">
+              <div className="grid place-items-center h-full w-12 text-[#1E5ADF]">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                className="peer h-full w-full outline-none text-gray-700 pr-2 placeholder-gray-500 font-medium"
+                type="text"
+                id="search"
+                placeholder="Buscar evento..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
         </header>
 

@@ -9,11 +9,16 @@ import CrearEvento from './pages/CrearEvento';
 import { ComprarBoletos } from './pages/ComprarBoletos';
 import  CatalogoEventos  from './pages/CatalogoEventos';
 import EventoDetalle from './components/EventoDetalle';
+import PagoReserva from './pages/PagoReserva';
+import ProcesandoPago from './components/ProcesandoPago'; 
+import ResultadoPago from './components/ResultadoPago';
+import MisBoletos from './pages/MisBoletos';
 
 function App() {
   return (
     <Router>
       <Routes>
+
         <Route path="/" element={<CatalogoEventos />} />
         {/* Si el usuario entra a la raíz, lo enviamos al login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
@@ -68,7 +73,17 @@ function App() {
 
         {/* Ruta para ver detalles de un evento específico */}
        <Route path="/evento/:id" element={<EventoDetalle />}
-        />    
+        />
+        {/* Ruta para el proceso de pago después de seleccionar boletos */}
+        <Route path="/pago/:reservaId" element={<PagoReserva />}
+        />  
+
+         {/* Rutas para el proceso de pago */}
+        <Route path="/pago/procesando" element={<ProcesandoPago />} />
+        <Route path="/pago/resultado" element={<ResultadoPago />} />  
+
+        {/*Rutas para mis boletos*/}
+        <Route path="/my-tickets" element={<MisBoletos />} />
       </Routes>
     </Router>
   );

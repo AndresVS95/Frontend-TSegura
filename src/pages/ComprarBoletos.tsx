@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { eventService } from '../services/eventService';
-import MapaInteractivo from '../components/MapaInteractivo';
+import MapaInteractivo from '../components/MapaInterativo';
 
 // Definición de tipos basada en lo que envía el Backend
 interface Zona {

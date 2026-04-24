@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
@@ -15,6 +15,9 @@ export interface DecodedToken {
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const desde = location.state?.from?.pathname || '/evento'; // Redirigir a la página de eventos después del login
 
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -107,12 +110,15 @@ export const Login: React.FC = () => {
             const decoded = jwtDecode<DecodedToken>(token);
             console.log("¡Bienvenido!", decoded.nombre_completo);
 
-            if (decoded.perfil === 'ORGANIZADOR') {
+            // Redireccionar a la página desde la cual vino o al dashboard según el perfil
+            if (desde && desde !== '/evento') {
+                navigate(desde, { replace: true });
+            } else if (decoded.perfil === 'ORGANIZADOR') {
                 navigate('/dashboard-organizer', { replace: true });
             } else if (decoded.perfil === 'COMPRADOR') {
                 navigate('/dashboard-buyer', { replace: true });
             } else {
-                navigate('/', { replace: true });
+                navigate(desde, { replace: true });
             }
 
         } catch (error: any) {

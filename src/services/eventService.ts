@@ -103,6 +103,8 @@ obtenerEventosPublicados: async (query: string = '') => {
   return await response.json();
 },
 
+  
+
 
   // --- NUEVAS FUNCIONES PARA EL MAPA ---
 
@@ -131,6 +133,33 @@ obtenerEventosPublicados: async (query: string = '') => {
     const response = await fetch('/mapa-guillermo.svg');
     if (!response.ok) throw new Error('Error al cargar el archivo SVG');
     return await response.text(); // fetch devuelve texto para el SVG, no JSON
+  },
+  
+  
+  obtenerDisponibilidadZonas: async (id: string) => {
+    // Este es el endpoint de la tarea de JG de la HU-007
+    const response = await fetch(`http://localhost:8080/api/events/${id}/zones/availability`);
+    return await response.json();
+  },
+
+  crearReserva: async (eventoId: string, zonaId: string, cantidad: number) => {
+    const response = await fetch(`http://localhost:8080/api/reservations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        eventoId: parseInt(eventoId),
+        zonaId: zonaId,
+        cantidadAsientos: cantidad
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('No se pudo completar la reserva. Es posible que los cupos se hayan agotado.');
+    }
+
+    return await response.json();
   }
 
   
