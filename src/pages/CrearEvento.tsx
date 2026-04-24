@@ -2,8 +2,9 @@ import { useNavigate } from 'react-router-dom';
 import GeneralInfoForm from '../components/GeneralInfoForm';
 import VenueMap from '../components/VenueMap';
 import ZonesPublish from '../components/ZonesPublish';
-import { OrganizerNavbar } from '../components/OrganizerNavbar';
 import { useEventWizard } from '../hooks/useEventWizard';
+import OrganizerLayout from '../components/OrganizerLayout';
+import { ArrowLeft, X } from 'lucide-react';
 
 export default function CrearEvento() {
   const navigate = useNavigate();
@@ -21,53 +22,70 @@ export default function CrearEvento() {
   } = useEventWizard();
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <OrganizerNavbar />
+    <OrganizerLayout>
+      <div className="mb-10">
+        <button 
+          onClick={() => navigate('/dashboard-organizer')} 
+          className="group flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-red-500 transition-colors uppercase tracking-widest mb-6"
+        >
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> 
+          Cancelar y Volver
+        </button>
 
-      <main className="max-w-7xl mx-auto p-6 md:p-10">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
-            <h2 className="text-3xl font-black text-[#03292e]">Crear Nuevo Evento</h2>
-            <p className="text-gray-500 font-medium mt-2">Paso {step} de 3</p>
+            <h2 className="text-4xl font-black text-gray-900 tracking-tight">Crear Nuevo Evento</h2>
+            <div className="flex items-center gap-4 mt-3">
+              <div className="flex gap-1">
+                {[1, 2, 3].map((s) => (
+                  <div 
+                    key={s} 
+                    className={`h-1.5 w-8 rounded-full transition-all duration-500 ${s <= step ? 'bg-[#1E5ADF]' : 'bg-gray-200'}`}
+                  />
+                ))}
+              </div>
+              <p className="text-gray-500 font-bold text-xs uppercase tracking-tighter">Paso {step} de 3</p>
+            </div>
           </div>
+          
           <button 
-            className="border-2 border-red-500 text-red-500 px-6 py-2 rounded-xl font-bold hover:bg-red-50 transition-all" 
+            className="flex items-center gap-2 text-gray-400 hover:text-gray-900 font-bold text-sm transition-colors" 
             onClick={() => navigate('/dashboard-organizer')}
           >
-            Cancelar
+            <X size={18} /> Salir sin guardar
           </button>
         </div>
+      </div>
 
-        <div className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-200/50 min-h-[400px]">
-          {step === 1 && (
-            <GeneralInfoForm 
-              formData={formData} 
-              handleChange={handleChange} 
-              nextStep={nextStep} 
-              errors={errors} 
-            />
-          )}
-          
-          {step === 2 && (
-            <VenueMap 
-              formData={formData} 
-              setFormData={setFormData} 
-              nextStep={nextStep} 
-              prevStep={prevStep} 
-              errors={errors} 
-            />
-          )}
-          
-          {step === 3 && (
-            <ZonesPublish 
-              submitEvent={handleSubmit} 
-              prevStep={prevStep} 
-              isLoading={isLoading} 
-              formData={formData}
-            />
-          )}
-        </div>
-      </main>
-    </div>
+      <div className="bg-white p-8 md:p-12 rounded-[3rem] border border-gray-100 shadow-xl shadow-gray-200/20 min-h-[500px]">
+        {step === 1 && (
+          <GeneralInfoForm 
+            formData={formData} 
+            handleChange={handleChange} 
+            nextStep={nextStep} 
+            errors={errors} 
+          />
+        )}
+        
+        {step === 2 && (
+          <VenueMap 
+            formData={formData} 
+            setFormData={setFormData} 
+            nextStep={nextStep} 
+            prevStep={prevStep} 
+            errors={errors} 
+          />
+        )}
+        
+        {step === 3 && (
+          <ZonesPublish 
+            submitEvent={handleSubmit} 
+            prevStep={prevStep} 
+            isLoading={isLoading} 
+            formData={formData}
+          />
+        )}
+      </div>
+    </OrganizerLayout>
   );
 }
