@@ -1,3 +1,4 @@
+// src/pages/Login.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
@@ -7,19 +8,18 @@ import { loginUsuario } from '../services/authService';
 import { tokenManager } from '../lib/tokenManager';
 import type { DecodedToken } from '../types/auth.types';
 
-// Re-export para compatibilidad con archivos que importan desde aquí
 export type { DecodedToken } from '../types/auth.types';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const desde = location.state?.from?.pathname || '/evento'; // Redirigir a la página de eventos después del login
+    // ✅ Si venía de una ruta protegida, redirigir ahí; si no, al catálogo
+    const desde = location.state?.from?.pathname || '/';
 
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
-
     const [correo, setCorreo] = useState('');
     const [contrasena, setContrasena] = useState('');
 
@@ -30,38 +30,47 @@ export const Login: React.FC = () => {
 
         try {
             const response = await loginUsuario({ correo, contrasena });
-
             const token = response.token || response;
 
             if (!token || typeof token !== 'string') {
-                throw new Error("No se recibió un token válido del servidor");
+                throw new Error('No se recibió un token válido del servidor');
             }
 
+            // ✅ Guardar token ANTES de decodificar y navegar
             tokenManager.set(token);
 
             const decoded = jwtDecode<DecodedToken>(token);
 
-            // Redireccionar a la página desde la cual vino o al dashboard según el perfil
-            if (desde && desde !== '/evento') {
+            console.log('Token decodificado:', decoded); // ← útil para verificar el campo del rol
+
+            // ✅ Redirección según perfil
+            // Si venía de una ruta protegida específica, respetar ese destino
+            if (desde !== '/') {
                 navigate(desde, { replace: true });
-            } else if (decoded.perfil === 'ORGANIZADOR') {
+                return;
+            }
+
+            // Si no, redirigir según rol
+            if (decoded.perfil === 'ORGANIZADOR') {
                 navigate('/dashboard-organizer', { replace: true });
             } else if (decoded.perfil === 'COMPRADOR') {
                 navigate('/dashboard-buyer', { replace: true });
             } else {
-                navigate(desde, { replace: true });
+                // ✅ Fallback seguro: catálogo, nunca a una ruta inexistente
+                console.warn(`Perfil desconocido: "${decoded.perfil}" — revisar campo en JWT`);
+                navigate('/', { replace: true });
             }
 
         } catch (error: any) {
-            console.error("Error en el login:", error);
+            console.error('Error en el login:', error);
 
             if (error.response?.status === 429) {
-                setErrorMsg("Demasiados intentos. Tu cuenta ha sido bloqueada temporalmente.");
+                setErrorMsg('Demasiados intentos. Tu cuenta ha sido bloqueada temporalmente.');
             } else {
                 setErrorMsg(
                     error.response?.data?.message ||
                     error.response?.data?.error ||
-                    "Credenciales incorrectas o error de conexión."
+                    'Credenciales incorrectas o error de conexión.'
                 );
             }
         } finally {
@@ -72,9 +81,10 @@ export const Login: React.FC = () => {
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-white">
 
+            {/* Panel izquierdo decorativo */}
             <div className="hidden md:flex md:w-5/12 bg-[#1E5ADF] text-white p-12 flex-col justify-between relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-                    <div className="w-full h-full bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-white to-transparent"></div>
+                    <div className="w-full h-full bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-white to-transparent" />
                 </div>
 
                 <div className="relative z-10">
@@ -95,11 +105,14 @@ export const Login: React.FC = () => {
                 </div>
             </div>
 
+            {/* Panel derecho: formulario */}
             <div className="w-full md:w-7/12 flex items-center justify-center p-6 sm:p-12 lg:p-20 overflow-y-auto">
                 <div className="w-full max-w-md animate-fade-in">
 
                     <div className="mb-10">
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Inicia sesión en tu cuenta</h2>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                            Inicia sesión en tu cuenta
+                        </h2>
                     </div>
 
                     {errorMsg && (
@@ -124,7 +137,7 @@ export const Login: React.FC = () => {
                             <Input
                                 label="Contraseña"
                                 id="password"
-                                type={showPassword ? "text" : "password"}
+                                type={showPassword ? 'text' : 'password'}
                                 placeholder="Contraseña"
                                 value={contrasena}
                                 onChange={(e) => setContrasena(e.target.value)}
@@ -137,13 +150,16 @@ export const Login: React.FC = () => {
                                         className="text-gray-400 hover:text-gray-600"
                                         disabled={isLoading}
                                     >
-                                        {showPassword ? "🙈" : "👁️"}
+                                        {showPassword ? '🙈' : '👁️'}
                                     </button>
                                 }
                             />
 
                             <div className="flex justify-end mt-2 mb-6">
-                                <Link to="/forgot-password" className="text-sm text-[#1E5ADF] hover:underline font-medium">
+                                <Link
+                                    to="/forgot-password"
+                                    className="text-sm text-[#1E5ADF] hover:underline font-medium"
+                                >
                                     ¿Olvidaste tu contraseña?
                                 </Link>
                             </div>
@@ -156,7 +172,10 @@ export const Login: React.FC = () => {
 
                     <p className="mt-8 text-center text-sm text-gray-600">
                         ¿Nuevo en TSegura?{' '}
-                        <Link to="/register" className="text-[#1E5ADF] hover:underline font-bold">
+                        <Link
+                            to="/register"
+                            className="text-[#1E5ADF] hover:underline font-bold"
+                        >
                             Crear cuenta
                         </Link>
                     </p>

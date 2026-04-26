@@ -36,13 +36,22 @@ export const eventService = {
     return response.data;
   },
 
-  obtenerEventosPublicados: async (query: string = '') => {
-    const url = query 
-      ? `/api/eventos/publicados?q=${encodeURIComponent(query)}` 
-      : `/api/eventos/publicados`;
-
-    const response = await api.get(url);
-    return response.data;
+  obtenerEventosPublicados: async (query: string = ''): Promise<Evento[]> => {
+    const response = await api.get('/api/eventos');
+    const todos: Evento[] = response.data;
+ 
+    // Filtrar solo los que estén en estado PUBLICADO
+    const publicados = todos.filter((e: any) => e.estado === 'PUBLICADO');
+ 
+    // Aplicar búsqueda por nombre si hay query
+    if (query.trim()) {
+      const termino = query.toLowerCase();
+      return publicados.filter((e: any) =>
+        e.nombre?.toLowerCase().includes(termino)
+      );
+    }
+ 
+    return publicados;
   },
 
   obtenerEventoPorId: async (id: string | number): Promise<Evento> => {
@@ -61,5 +70,24 @@ export const eventService = {
     const response = await fetch("/mapa-guillermo.svg");
     if (!response.ok) throw new Error("Error al cargar el archivo SVG");
     return await response.text();
+  },
+   obtenerDisponibilidadZonas: async (
+    eventoId: string | number
+  ): Promise<Record<string, 'DISPONIBLE' | 'AGOTADO'>> => {
+ 
+    // ── REAL (descomentar cuando JG tenga el endpoint listo) ──────────────
+    // const response = await api.get(`/api/eventos/${eventoId}/zonas/disponibilidad`);
+    // return response.data;
+ 
+    // ── MOCK ACTIVO: endpoint aún no existe en el backend ─────────────────
+    // Todas las zonas disponibles para no bloquear el flujo de compra
+    console.info(`[Mock] Disponibilidad para evento ${eventoId}`);
+    return new Promise((resolve) =>
+      setTimeout(() => resolve({
+        VIP:     'DISPONIBLE',
+        PLATA:   'DISPONIBLE',
+        GENERAL: 'DISPONIBLE',
+      }), 300)
+    );
   },
 };

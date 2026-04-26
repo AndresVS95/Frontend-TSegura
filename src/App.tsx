@@ -1,3 +1,4 @@
+// src/App.tsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { Login } from './pages/Login';
@@ -8,92 +9,95 @@ import DashboardBuyer from './pages/Home';
 import PrivateRoute from './components/PrivateRoute';
 import CrearEvento from './pages/CrearEvento';
 import { ComprarBoletos } from './pages/ComprarBoletos';
-import  CatalogoEventos  from './pages/CatalogoEventos';
-import EventoDetalle from './components/EventoDetalle';
+import CatalogoEventos from './pages/CatalogoEventos';
+import EventoDetalle from './components/EventoDetalle';  // ✅ corregido: viene de pages, no components
 import PagoReserva from './pages/PagoReserva';
-import ProcesandoPago from './components/ProcesandoPago'; 
+import ProcesandoPago from './components/ProcesandoPago';
 import ResultadoPago from './components/ResultadoPago';
 import MisBoletos from './pages/MisBoletos';
+import PanelAsistentesZona from './components/PanelAsistentesZona';
 
 function App() {
   return (
     <>
-      <Toaster position="top-center" reverseOrder={false} toastOptions={{ duration: 4000 }} />
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        toastOptions={{ duration: 4000 }}
+      />
       <Router>
-      <Routes>
+        <Routes>
 
-        <Route path="/" element={<CatalogoEventos />} />
-        {/* Si el usuario entra a la raíz, lo enviamos al login */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+          {/* ── Rutas públicas ── */}
+          <Route path="/" element={<CatalogoEventos />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Rutas de nuestra aplicación */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        {/* Ruta Protegida para COMPRADOR */}
-        <Route
-          path="/dashboard-buyer"
-          element={
-            <PrivateRoute allowedRole="COMPRADOR">
-              <DashboardBuyer />
-            </PrivateRoute>
-          }
-        />
+          {/* ── Detalle de evento (público) */}
+          <Route path="/eventos/:id" element={<EventoDetalle />} />
 
-        {/* Ruta Protegida para ORGANIZADOR */}
-        <Route
-          path="/dashboard-organizer"
-          element={
-            <PrivateRoute allowedRole="ORGANIZADOR">
-              <DashboardOrganizer />
-            </PrivateRoute>
-          }
-        />
+          {/* ── Rutas de pago ── */}
+          <Route path="/pago/:reservaId" element={<PagoReserva />} />
+          {/* Con parámetros — coinciden con navigate() en PagoReserva y ProcesandoPago */}
+          <Route path="/pago/procesando/:reservaId" element={<ProcesandoPago />} />
+          <Route path="/pago/resultado/:estado/:reservaId" element={<ResultadoPago />} />
 
-        {/* Ruta Protegida: Mapa para comprar boletos */}
-        <Route
-          path="/comprar/:eventoId/zona/:zonaId"
-          element={
-            <PrivateRoute allowedRole="COMPRADOR">
-              <ComprarBoletos />
-            </PrivateRoute>
-          }
-        />
-        
-        {/* Wizard para crear eventos */}
-        <Route
-          path="/crearevento"
-          element={
-            <PrivateRoute allowedRole="ORGANIZADOR">
-              <CrearEvento />
-            </PrivateRoute>
-          }
-        />
+          {/* ── Mis boletos ── */}
+          <Route path="/my-tickets" element={<MisBoletos />} />
 
-        {/* Ruta comodín (opcional): si escribe una URL que no existe, lo enviamos al login */}
-        <Route path="*" element={<Navigate to="/login" replace />} 
-        />
+          {/* ── Rutas protegidas: COMPRADOR ── */}
+          <Route
+            path="/dashboard-buyer"
+            element={
+              <PrivateRoute allowedRole="COMPRADOR">
+                <DashboardBuyer />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/comprar/:eventoId/zona/:zonaId"
+            element={
+              <PrivateRoute allowedRole="COMPRADOR">
+                <ComprarBoletos />
+              </PrivateRoute>
+            }
+          />
 
-        {/* Ruta para ver detalles de un evento específico */}
-       <Route path="/evento/:id" element={<EventoDetalle />}
-        />
-        {/* Ruta para el proceso de pago después de seleccionar boletos */}
-        <Route path="/pago/:reservaId" element={<PagoReserva />}
-        />  
+          {/* ── Rutas protegidas: ORGANIZADOR ── */}
+          <Route
+            path="/dashboard-organizer"
+            element={
+              <PrivateRoute allowedRole="ORGANIZADOR">
+                <DashboardOrganizer />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/crearevento"
+            element={
+              <PrivateRoute allowedRole="ORGANIZADOR">
+                <CrearEvento />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/organizer/eventos/:eventoId/zonas/:zonaId/asistentes"
+            element={
+              <PrivateRoute allowedRole="ORGANIZADOR">
+                <PanelAsistentesZona />
+              </PrivateRoute>
+            }
+          />
 
-         {/* Rutas para el proceso de pago */}
-        <Route path="/pago/procesando" element={<ProcesandoPago />} />
-        <Route path="/pago/resultado" element={<ResultadoPago />} />  
+          {/* ── Comodín: SIEMPRE al final ──
+              ✅ Movido aquí para no interceptar las rutas de arriba */}
+          <Route path="*" element={<Navigate to="/" replace />} />
 
-        {/*Rutas para mis boletos*/}
-        <Route path="/my-tickets" element={<MisBoletos />} />
-      </Routes>
-    </Router>
+        </Routes>
+      </Router>
     </>
   );
 }
 
 export default App;
-
-
-
