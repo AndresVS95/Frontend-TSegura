@@ -1,3 +1,4 @@
+// src/App.tsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { Login } from './pages/Login';
@@ -20,7 +21,11 @@ import OrganizerSettings from './pages/OrganizerSettings';
 function App() {
   return (
     <>
-      <Toaster position="top-center" reverseOrder={false} toastOptions={{ duration: 4000 }} />
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        toastOptions={{ duration: 4000 }}
+      />
       <Router>
         <Routes>
           <Route path="/" element={<CatalogoEventos />} />

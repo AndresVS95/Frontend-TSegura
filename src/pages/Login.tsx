@@ -1,3 +1,4 @@
+// src/pages/Login.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '../components/Input';
@@ -5,7 +6,6 @@ import { Button } from '../components/Button';
 import { loginUsuario } from '../services/authService';
 import { tokenManager } from '../lib/tokenManager';
 
-// Re-export para compatibilidad con archivos que importan desde aquí
 export type { DecodedToken } from '../types/auth.types';
 
 // ─── COMPONENTES VISUALES ─────────────────────────────────────────────
@@ -39,11 +39,14 @@ const AuthBanner = () => (
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // ✅ Si venía de una ruta protegida, redirigir ahí; si no, al catálogo
+    const desde = location.state?.from?.pathname || '/';
 
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
-
     const [correo, setCorreo] = useState('');
     const [contrasena, setContrasena] = useState('');
 
@@ -57,9 +60,10 @@ export const Login: React.FC = () => {
             const token = response.token || response;
 
             if (!token || typeof token !== 'string') {
-                throw new Error("No se recibió un token válido del servidor");
+                throw new Error('No se recibió un token válido del servidor');
             }
 
+            // ✅ Guardar token ANTES de decodificar y navegar
             tokenManager.set(token);
             
             // Usamos tokenManager.getUser() en lugar de jwtDecode directamente
@@ -75,6 +79,8 @@ export const Login: React.FC = () => {
             } else if (user.perfil === 'COMPRADOR') {
                 navigate('/dashboard-buyer', { replace: true });
             } else {
+                // ✅ Fallback seguro: catálogo, nunca a una ruta inexistente
+                console.warn(`Perfil desconocido: "${decoded.perfil}" — revisar campo en JWT`);
                 navigate('/', { replace: true });
             }
 
@@ -100,11 +106,14 @@ export const Login: React.FC = () => {
         <div className="min-h-screen flex flex-col md:flex-row bg-white">
             <AuthBanner />
 
+            {/* Panel derecho: formulario */}
             <div className="w-full md:w-7/12 flex items-center justify-center p-6 sm:p-12 lg:p-20 overflow-y-auto">
                 <div className="w-full max-w-md animate-fade-in">
 
                     <div className="mb-10">
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Inicia sesión en tu cuenta</h2>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                            Inicia sesión en tu cuenta
+                        </h2>
                     </div>
 
                     {errorMsg && (
@@ -129,7 +138,7 @@ export const Login: React.FC = () => {
                             <Input
                                 label="Contraseña"
                                 id="password"
-                                type={showPassword ? "text" : "password"}
+                                type={showPassword ? 'text' : 'password'}
                                 placeholder="Contraseña"
                                 value={contrasena}
                                 onChange={(e) => setContrasena(e.target.value)}
@@ -142,13 +151,16 @@ export const Login: React.FC = () => {
                                         className="text-gray-400 hover:text-gray-600"
                                         disabled={isLoading}
                                     >
-                                        {showPassword ? "🙈" : "👁️"}
+                                        {showPassword ? '🙈' : '👁️'}
                                     </button>
                                 }
                             />
 
                             <div className="flex justify-end mt-2 mb-6">
-                                <Link to="/forgot-password" className="text-sm text-[#1E5ADF] hover:underline font-medium">
+                                <Link
+                                    to="/forgot-password"
+                                    className="text-sm text-[#1E5ADF] hover:underline font-medium"
+                                >
                                     ¿Olvidaste tu contraseña?
                                 </Link>
                             </div>
@@ -161,7 +173,10 @@ export const Login: React.FC = () => {
 
                     <p className="mt-8 text-center text-sm text-gray-600">
                         ¿Nuevo en TSegura?{' '}
-                        <Link to="/register" className="text-[#1E5ADF] hover:underline font-bold">
+                        <Link
+                            to="/register"
+                            className="text-[#1E5ADF] hover:underline font-bold"
+                        >
                             Crear cuenta
                         </Link>
                     </p>

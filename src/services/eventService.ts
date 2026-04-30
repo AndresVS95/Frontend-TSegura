@@ -1,11 +1,7 @@
 import api from "./api";
-import type { Evento, CrearEventoDTO, Asiento } from "../types/event.types";
+import type { Evento, CrearEventoDTO} from "../types/event.types";
 
-/**
- * Servicio de eventos — migrado de fetch manual a Axios.
- * Ya no necesita getHeaders() ni BASE_URL propios porque
- * api.ts maneja todo centralizadamente.
- */
+
 export const eventService = {
 
   /** Crear un nuevo evento (POST /api/eventos) */
@@ -68,14 +64,8 @@ export const eventService = {
     return response.data;
   },
 
-  /** Obtener datos de un evento específico (GET /api/eventos/:id) */
-  obtenerDatosEvento: async (eventoId: string | number): Promise<Evento> => {
-    const response = await api.get(`/api/eventos/${eventoId}`);
-    return response.data;
-  },
-
   /** Obtener los asientos de una zona (GET /api/zonas/:id/asientos) */
-  obtenerSillasDeZona: async (zonaId: string | number): Promise<Asiento[]> => {
+  obtenerSillasDeZona: async (zonaId: string | number) => {
     const response = await api.get(`/api/zonas/${zonaId}/asientos`);
     return response.data;
   },
@@ -85,5 +75,24 @@ export const eventService = {
     const response = await fetch("/mapa-guillermo.svg");
     if (!response.ok) throw new Error("Error al cargar el archivo SVG");
     return await response.text();
+  },
+   obtenerDisponibilidadZonas: async (
+    eventoId: string | number
+  ): Promise<Record<string, 'DISPONIBLE' | 'AGOTADO'>> => {
+ 
+    // ── REAL (descomentar cuando JG tenga el endpoint listo) ──────────────
+    // const response = await api.get(`/api/eventos/${eventoId}/zonas/disponibilidad`);
+    // return response.data;
+ 
+    // ── MOCK ACTIVO: endpoint aún no existe en el backend ─────────────────
+    // Todas las zonas disponibles para no bloquear el flujo de compra
+    console.info(`[Mock] Disponibilidad para evento ${eventoId}`);
+    return new Promise((resolve) =>
+      setTimeout(() => resolve({
+        VIP:     'DISPONIBLE',
+        PLATA:   'DISPONIBLE',
+        GENERAL: 'DISPONIBLE',
+      }), 300)
+    );
   },
 };

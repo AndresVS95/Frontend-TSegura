@@ -9,8 +9,31 @@ import type { Evento } from '../types/event.types';
  */
 const DashboardBuyer: React.FC = () => {
   const navigate = useNavigate();
-  const user = tokenManager.getUser();
-  const nombre = user?.nombre_completo ?? 'Usuario';
+  const [nombre, setNombre] = useState('');
+  const [eventos, setEventos] = useState<any[]>([]);
+  const [isLoadingEventos, setIsLoadingEventos] = useState(false);
+  const [busqueda, setBusqueda] = useState('');
+
+  useEffect(() => {
+    // ✅ Usa tokenManager en lugar de localStorage directo
+    const user = tokenManager.getUser();
+    if (!user || user.perfil !== 'COMPRADOR') {
+      navigate('/login', { replace: true });
+      return;
+    }
+    setNombre(user.nombre_completo);
+
+    // Cargar eventos publicados
+    setIsLoadingEventos(true);
+    eventService
+      .obtenerEventosPublicados()
+      .then((data) => setEventos(data))
+      .catch((error) => {
+        console.error('Error al cargar eventos:', error);
+        setEventos([]);
+      })
+      .finally(() => setIsLoadingEventos(false));
+  }, [navigate]);
 
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,67 +53,94 @@ const DashboardBuyer: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
+    // ✅ Usa tokenManager en lugar de localStorage directo
     tokenManager.clearAll();
     navigate('/login', { replace: true });
   };
 
+  const handleBuscar = () => {
+    // Navega al catálogo público con el término de búsqueda
+    if (busqueda.trim()) {
+      navigate(`/?q=${encodeURIComponent(busqueda)}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      {/* Navbar Superior para Compradores */}
-      <nav className="bg-white px-8 py-4 shadow-sm border-b border-gray-100 flex justify-between items-center sticky top-0 z-50">
-        <h1 className="text-2xl font-bold text-[#1E5ADF] flex items-center gap-2">
-          <span className="text-3xl">🎫</span> TSegura.
-        </h1>
 
-        <div className="flex items-center gap-6">
-          <span className="text-sm font-medium text-gray-600 hidden md:block">
-            Hola, <span className="text-gray-900 font-bold">{nombre}</span>
+      {/* ── Navbar ── */}
+      <nav className="bg-white py-4 px-8 flex justify-between items-center border-b border-gray-100">
+        <div className="text-[#1E5ADF] font-black text-2xl flex items-center">
+          <span className="mr-1">💳</span> TSegura.
+        </div>
+        <div className="flex items-center gap-6 text-sm font-medium">
+          {/* ✅ Acceso directo a mis boletos */}
+          <button
+            onClick={() => navigate('/my-tickets')}
+            className="text-gray-600 hover:text-[#1E5ADF] font-bold transition-colors"
+          >
+            🎟️ Mis Entradas
+          </button>
+          <span className="text-gray-500">
+            Hola, <span className="font-bold text-black">{nombre}</span>
           </span>
           <button
             onClick={handleLogout}
-            className="text-sm font-bold text-red-500 hover:text-red-700 transition-colors"
+            className="text-red-500 font-bold hover:underline"
           >
             Cerrar Sesión
           </button>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto p-6 md:p-10">
-        {/* Banner de Bienvenida */}
-        <section className="bg-[#1E5ADF] rounded-[3rem] p-10 md:p-16 text-white relative overflow-hidden mb-12 shadow-2xl shadow-blue-200">
-          <div className="relative z-10 max-w-2xl">
-            <h2 className="text-4xl md:text-5xl font-black mb-4 leading-tight">
-              Encuentra tu próximo evento inolvidable
-            </h2>
-            <p className="text-blue-100 text-lg mb-8">
-              Explora conciertos, conferencias y festivales con la seguridad que solo TSegura te ofrece.
-            </p>
+      <div className="max-w-5xl mx-auto mt-10">
+        {/* ── Hero ── */}
+        <div className="bg-[#1E5ADF] rounded-[3rem] p-16 text-white text-center shadow-2xl relative overflow-hidden">
+          <h1 className="text-5xl font-black mb-6 leading-tight">
+            Encuentra tu próximo<br />evento inolvidable
+          </h1>
+          <p className="text-blue-100 text-lg mb-10 max-w-2xl mx-auto">
+            Explora conciertos, conferencias y festivales con la seguridad que solo TSegura te ofrece.
+          </p>
 
-            {/* Buscador Rápido */}
-            <div className="bg-white p-2 rounded-2xl flex items-center shadow-lg">
-              <input
-                type="text"
-                placeholder="Buscar eventos, artistas o lugares..."
-                className="flex-1 px-4 py-2 text-gray-800 outline-none"
-              />
-              <button className="bg-[#1E5ADF] px-6 py-3 rounded-xl font-bold hover:bg-blue-800 transition-all">
-                Buscar
-              </button>
-            </div>
-          </div>
-
-          {/* Elemento decorativo */}
-          <div className="absolute top-[-20%] right-[-10%] w-96 h-96 bg-blue-400 rounded-full opacity-20 blur-3xl"></div>
-        </section>
-
-        {/* Categorías Rápidas */}
-        <div className="flex gap-4 mb-10 overflow-x-auto pb-2 scrollbar-hide">
-          {['Todos', 'Conciertos', 'Teatro', 'Deportes', 'Festivales'].map((cat) => (
-            <button key={cat} className="px-6 py-2.5 bg-white rounded-full border border-gray-200 text-sm font-bold text-gray-600 hover:border-[#1E5ADF] hover:text-[#1E5ADF] transition-all whitespace-nowrap shadow-sm">
-              {cat}
+          <div className="bg-white rounded-full p-2 flex items-center max-w-xl mx-auto shadow-lg">
+            <input
+              type="text"
+              placeholder="Buscar eventos, artistas o lugares..."
+              className="flex-grow px-6 py-2 text-gray-700 outline-none rounded-full"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
+            />
+            <button
+              onClick={handleBuscar}
+              className="bg-[#1E5ADF] text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 transition-all"
+            >
+              Buscar
             </button>
-          ))}
+          </div>
         </div>
+      </div>
+
+      {/* ── Categorías ── */}
+      <div className="flex justify-center gap-3 my-12">
+        {['Todos', 'Conciertos', 'Teatro', 'Deportes', 'Festivales'].map((cat, i) => (
+          <button
+            key={i}
+            className={`px-6 py-2 rounded-full border ${
+              i === 0
+                ? 'bg-white border-gray-300 shadow-sm'
+                : 'border-gray-200 text-gray-400'
+            } font-bold text-sm hover:border-blue-500 hover:text-blue-500 transition-all`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Grid de eventos ── */}
+      <div className="max-w-7xl mx-auto px-8 pb-20">
+        <h2 className="text-2xl font-black mb-8 text-gray-900">Eventos Destacados</h2>
 
         {/* Grid de Eventos */}
         <h3 className="text-2xl font-black text-[#03292e] mb-8 px-2">Eventos Destacados</h3>

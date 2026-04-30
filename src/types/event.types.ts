@@ -8,12 +8,19 @@ export type EstadoEvento = 'BORRADOR' | 'PUBLICADO' | 'CANCELADO' | 'FINALIZADO'
 
 /** Zona dentro de un evento (VIP, General, Plata, etc.) */
 export interface Zona {
-  zonaId: number;
-  nombreZona: string;
-  capacidad: number;
-  precio: number;
-  asientosNumerados: boolean;
+  // Nombres del backend (snake_case)
+  nombre_zona?: string;
+  // Nombres para la UI (camelCase)
+  zonaId?: string | number;
+  nombreZona?: string;
+  // Campos de capacidad
+  capacidad?: number;
+  capacidadTotal?: number;
   cuposDisponibles?: number;
+  // Otros campos
+  precio: number;
+  asientos_numerados?: boolean;
+  asientosNumerados?: boolean;
 }
 
 /** Evento tal como lo devuelve el backend (GET /api/eventos) */
@@ -29,6 +36,7 @@ export interface Evento {
   permiteReventa?: boolean;
   precioMaxReventa?: number;
   recintoId?: number;
+  nombreRecinto?: string;
   tipoEventoId?: number;
   zonas?: Zona[];
   entradasVendidas?: number;
