@@ -10,12 +10,13 @@ import PrivateRoute from './components/PrivateRoute';
 import CrearEvento from './pages/CrearEvento';
 import { ComprarBoletos } from './pages/ComprarBoletos';
 import CatalogoEventos from './pages/CatalogoEventos';
-import EventoDetalle from './components/EventoDetalle';  // ✅ corregido: viene de pages, no components
-import PagoReserva from './pages/PagoReserva';
-import ProcesandoPago from './components/ProcesandoPago';
-import ResultadoPago from './components/ResultadoPago';
-import MisBoletos from './pages/MisBoletos';
-import PanelAsistentesZona from './components/PanelAsistentesZona';
+import DetalleEventoOrg from './pages/DetalleEventoOrg';
+
+// Importaciones de los nuevos módulos de la Suite de Organizador
+import OrganizerEvents from './pages/OrganizerEvents';
+import OrganizerFinances from './pages/OrganizerFinances';
+import OrganizerValidator from './pages/OrganizerValidator';
+import OrganizerSettings from './pages/OrganizerSettings';
 
 function App() {
   return (
@@ -27,26 +28,12 @@ function App() {
       />
       <Router>
         <Routes>
-
-          {/* ── Rutas públicas ── */}
           <Route path="/" element={<CatalogoEventos />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* ── Detalle de evento (público) */}
-          <Route path="/eventos/:id" element={<EventoDetalle />} />
-
-          {/* ── Rutas de pago ── */}
-          <Route path="/pago/:reservaId" element={<PagoReserva />} />
-          {/* Con parámetros — coinciden con navigate() en PagoReserva y ProcesandoPago */}
-          <Route path="/pago/procesando/:reservaId" element={<ProcesandoPago />} />
-          <Route path="/pago/resultado/:estado/:reservaId" element={<ResultadoPago />} />
-
-          {/* ── Mis boletos ── */}
-          <Route path="/my-tickets" element={<MisBoletos />} />
-
-          {/* ── Rutas protegidas: COMPRADOR ── */}
+          {/* Rutas para COMPRADOR */}
           <Route
             path="/dashboard-buyer"
             element={
@@ -55,6 +42,7 @@ function App() {
               </PrivateRoute>
             }
           />
+
           <Route
             path="/comprar/:eventoId/zona/:zonaId"
             element={
@@ -64,7 +52,7 @@ function App() {
             }
           />
 
-          {/* ── Rutas protegidas: ORGANIZADOR ── */}
+          {/* RUTAS PARA ORGANIZADOR (Suite Profesional) */}
           <Route
             path="/dashboard-organizer"
             element={
@@ -73,6 +61,25 @@ function App() {
               </PrivateRoute>
             }
           />
+
+          <Route
+            path="/organizer-events"
+            element={
+              <PrivateRoute allowedRole="ORGANIZADOR">
+                <OrganizerEvents />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/detalles/:id"
+            element={
+              <PrivateRoute allowedRole="ORGANIZADOR">
+                <DetalleEventoOrg />
+              </PrivateRoute>
+            }
+          />
+
           <Route
             path="/crearevento"
             element={
@@ -81,19 +88,36 @@ function App() {
               </PrivateRoute>
             }
           />
+
           <Route
-            path="/organizer/eventos/:eventoId/zonas/:zonaId/asistentes"
+            path="/organizer-finances"
             element={
               <PrivateRoute allowedRole="ORGANIZADOR">
-                <PanelAsistentesZona />
+                <OrganizerFinances />
               </PrivateRoute>
             }
           />
 
-          {/* ── Comodín: SIEMPRE al final ──
-              ✅ Movido aquí para no interceptar las rutas de arriba */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route
+            path="/organizer-validator"
+            element={
+              <PrivateRoute allowedRole="ORGANIZADOR">
+                <OrganizerValidator />
+              </PrivateRoute>
+            }
+          />
 
+          <Route
+            path="/organizer-settings"
+            element={
+              <PrivateRoute allowedRole="ORGANIZADOR">
+                <OrganizerSettings />
+              </PrivateRoute>
+            }
+          />
+
+          {/* Ruta comodín */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>
     </>

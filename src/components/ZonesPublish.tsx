@@ -43,7 +43,7 @@ export default function ZonesPublish({ submitEvent, prevStep, isLoading, formDat
           <div className="space-y-2">
             {formData.zonas.map((zona: any, idx: number) => (
               <div key={idx} className="flex justify-between text-sm">
-                <span className="font-medium text-gray-700">{zona.nombre_zona}</span>
+                <span className="font-medium text-gray-700">{zona.nombreZona}</span>
                 <span className="font-bold text-[#1E5ADF]">${zona.precio} USD</span>
               </div>
             ))}

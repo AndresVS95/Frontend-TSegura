@@ -36,25 +36,30 @@ export const eventService = {
     return response.data;
   },
 
-  obtenerEventosPublicados: async (query: string = ''): Promise<Evento[]> => {
+  /** Registrar Venta Manual (RF-O-10) */
+  registrarVentaManual: async (ventaData: any): Promise<any> => {
+    // El backend espera VentaManualDTO en /api/ventas/manual
+    const response = await api.post("/api/ventas/manual", ventaData);
+    return response.data;
+  },
+
+  obtenerEventosPublicados: async (query: string = '') => {
+    // Solución temporal: Como el backend no tiene el endpoint /publicados, 
+    // traemos todos y filtramos en el frontend para no bloquear el desarrollo.
     const response = await api.get('/api/eventos');
-    const todos: Evento[] = response.data;
- 
-    // Filtrar solo los que estén en estado PUBLICADO
-    const publicados = todos.filter((e: any) => e.estado === 'PUBLICADO');
- 
-    // Aplicar búsqueda por nombre si hay query
-    if (query.trim()) {
-      const termino = query.toLowerCase();
-      return publicados.filter((e: any) =>
-        e.nombre?.toLowerCase().includes(termino)
+    let publicados = response.data.filter((e: any) => String(e.estado).toUpperCase() === 'PUBLICADO');
+    
+    if (query) {
+      const q = query.toLowerCase();
+      publicados = publicados.filter((e: any) => 
+        e.nombre.toLowerCase().includes(q) || 
+        (e.descripcion && e.descripcion.toLowerCase().includes(q))
       );
     }
- 
     return publicados;
   },
 
-  obtenerEventoPorId: async (id: string | number): Promise<Evento> => {
+  obtenerEventoPorId: async (id: string | number) => {
     const response = await api.get(`/api/eventos/${id}`);
     return response.data;
   },

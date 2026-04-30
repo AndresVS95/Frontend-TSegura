@@ -1,14 +1,41 @@
 // src/pages/Login.tsx
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
+import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { loginUsuario } from '../services/authService';
 import { tokenManager } from '../lib/tokenManager';
-import type { DecodedToken } from '../types/auth.types';
 
 export type { DecodedToken } from '../types/auth.types';
+
+// ─── COMPONENTES VISUALES ─────────────────────────────────────────────
+
+const AuthBanner = () => (
+    <div className="hidden md:flex md:w-5/12 bg-[#1E5ADF] text-white p-12 flex-col justify-between relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+            <div className="w-full h-full bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-white to-transparent"></div>
+        </div>
+
+        <div className="relative z-10">
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+                <span className="text-3xl">🎫</span> TSegura.
+            </h1>
+        </div>
+
+        <div className="relative z-10 max-w-md">
+            <span className="text-4xl text-blue-300 font-serif leading-none">"</span>
+            <p className="text-lg leading-relaxed mt-2 mb-6 text-blue-50">
+                Tu acceso seguro a los mejores eventos. Inicia sesión para gestionar tus entradas.
+            </p>
+            <div className="flex items-center gap-2">
+                <span className="font-semibold">El equipo de TSegura</span>
+                <span className="text-green-400">✓</span>
+            </div>
+        </div>
+    </div>
+);
+
+// ─── LÓGICA PRINCIPAL ──────────────────────────────────────────────────
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -38,22 +65,18 @@ export const Login: React.FC = () => {
 
             // ✅ Guardar token ANTES de decodificar y navegar
             tokenManager.set(token);
-
-            const decoded = jwtDecode<DecodedToken>(token);
-
-            console.log('Token decodificado:', decoded); // ← útil para verificar el campo del rol
-
-            // ✅ Redirección según perfil
-            // Si venía de una ruta protegida específica, respetar ese destino
-            if (desde !== '/') {
-                navigate(desde, { replace: true });
-                return;
+            
+            // Usamos tokenManager.getUser() en lugar de jwtDecode directamente
+            // para asegurar que el token se valida (expiración, etc.)
+            const user = tokenManager.getUser();
+            
+            if (!user) {
+                throw new Error("Token inválido o expirado");
             }
 
-            // Si no, redirigir según rol
-            if (decoded.perfil === 'ORGANIZADOR') {
+            if (user.perfil === 'ORGANIZADOR') {
                 navigate('/dashboard-organizer', { replace: true });
-            } else if (decoded.perfil === 'COMPRADOR') {
+            } else if (user.perfil === 'COMPRADOR') {
                 navigate('/dashboard-buyer', { replace: true });
             } else {
                 // ✅ Fallback seguro: catálogo, nunca a una ruta inexistente
@@ -62,17 +85,18 @@ export const Login: React.FC = () => {
             }
 
         } catch (error: any) {
-            console.error('Error en el login:', error);
+            console.error("Error en el login:", error);
+            
+            const { status, data } = error.response || {};
 
-            if (error.response?.status === 429) {
-                setErrorMsg('Demasiados intentos. Tu cuenta ha sido bloqueada temporalmente.');
+            if (status === 429) {
+                setErrorMsg("Demasiados intentos. Tu cuenta ha sido bloqueada temporalmente.");
             } else {
-                setErrorMsg(
-                    error.response?.data?.message ||
-                    error.response?.data?.error ||
-                    'Credenciales incorrectas o error de conexión.'
-                );
+                setErrorMsg(data?.message || data?.error || "Credenciales incorrectas o error de conexión.");
             }
+            
+            // Por seguridad, si hay error crítico en el proceso, limpiamos el token parcial
+            tokenManager.remove(); 
         } finally {
             setIsLoading(false);
         }
@@ -80,30 +104,7 @@ export const Login: React.FC = () => {
 
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-white">
-
-            {/* Panel izquierdo decorativo */}
-            <div className="hidden md:flex md:w-5/12 bg-[#1E5ADF] text-white p-12 flex-col justify-between relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-                    <div className="w-full h-full bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-white to-transparent" />
-                </div>
-
-                <div className="relative z-10">
-                    <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <span className="text-3xl">🎫</span> TSegura.
-                    </h1>
-                </div>
-
-                <div className="relative z-10 max-w-md">
-                    <span className="text-4xl text-blue-300 font-serif leading-none">"</span>
-                    <p className="text-lg leading-relaxed mt-2 mb-6 text-blue-50">
-                        Tu acceso seguro a los mejores eventos. Inicia sesión para gestionar tus entradas.
-                    </p>
-                    <div className="flex items-center gap-2">
-                        <span className="font-semibold">El equipo de TSegura</span>
-                        <span className="text-green-400">✓</span>
-                    </div>
-                </div>
-            </div>
+            <AuthBanner />
 
             {/* Panel derecho: formulario */}
             <div className="w-full md:w-7/12 flex items-center justify-center p-6 sm:p-12 lg:p-20 overflow-y-auto">
