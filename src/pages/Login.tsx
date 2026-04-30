@@ -1,6 +1,6 @@
 // src/pages/Login.tsx
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { loginUsuario } from '../services/authService';
@@ -74,13 +74,15 @@ export const Login: React.FC = () => {
                 throw new Error("Token inválido o expirado");
             }
 
-            if (user.perfil === 'ORGANIZADOR') {
+            if (desde !== '/') {
+                navigate(desde, { replace: true });
+            } else if (user.perfil === 'ORGANIZADOR') {
                 navigate('/dashboard-organizer', { replace: true });
             } else if (user.perfil === 'COMPRADOR') {
                 navigate('/dashboard-buyer', { replace: true });
             } else {
                 // ✅ Fallback seguro: catálogo, nunca a una ruta inexistente
-                console.warn(`Perfil desconocido: "${decoded.perfil}" — revisar campo en JWT`);
+                console.warn(`Perfil desconocido: "${user.perfil}" — revisar campo en JWT`);
                 navigate('/', { replace: true });
             }
 

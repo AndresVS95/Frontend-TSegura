@@ -10,8 +10,8 @@ import type { Evento } from '../types/event.types';
 const DashboardBuyer: React.FC = () => {
   const navigate = useNavigate();
   const [nombre, setNombre] = useState('');
-  const [eventos, setEventos] = useState<any[]>([]);
-  const [isLoadingEventos, setIsLoadingEventos] = useState(false);
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [isLoadingEventos, setIsLoadingEventos] = useState(true);
   const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
@@ -34,23 +34,6 @@ const DashboardBuyer: React.FC = () => {
       })
       .finally(() => setIsLoadingEventos(false));
   }, [navigate]);
-
-  const [eventos, setEventos] = useState<Evento[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const cargarEventos = async () => {
-      try {
-        const data = await eventService.obtenerEventosPublicados();
-        setEventos(data);
-      } catch (error) {
-        console.error("Error al cargar eventos:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    cargarEventos();
-  }, []);
 
   const handleLogout = () => {
     // ✅ Usa tokenManager en lugar de localStorage directo
@@ -140,12 +123,9 @@ const DashboardBuyer: React.FC = () => {
 
       {/* ── Grid de eventos ── */}
       <div className="max-w-7xl mx-auto px-8 pb-20">
-        <h2 className="text-2xl font-black mb-8 text-gray-900">Eventos Destacados</h2>
-
-        {/* Grid de Eventos */}
-        <h3 className="text-2xl font-black text-[#03292e] mb-8 px-2">Eventos Destacados</h3>
+        <h2 className="text-2xl font-black text-[#03292e] mb-8 px-2">Eventos Destacados</h2>
         
-        {loading ? (
+        {isLoadingEventos ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3].map(n => <div key={n} className="h-72 bg-gray-200 animate-pulse rounded-[2.5rem]" />)}
           </div>
@@ -200,7 +180,7 @@ const DashboardBuyer: React.FC = () => {
             })}
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 };
