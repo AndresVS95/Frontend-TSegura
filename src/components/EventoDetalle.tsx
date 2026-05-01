@@ -54,17 +54,11 @@ const EventoDetalle: React.FC = () => {
   // Estado del mapa y panel lateral
   const [zonaSeleccionada, setZonaSeleccionada] = useState<string | null>(null);
   const [disponibilidad, setDisponibilidad] = useState<Record<string, 'DISPONIBLE' | 'AGOTADO'>>({});
+  const [cantidadBoletas, setCantidadBoletas] = useState<number>(1);
 
   // ── Carga inicial del evento ──────────────────────────────────────────────
   useEffect(() => {
     const cargarDatos = async () => {
-      // ✅ Verificar token ANTES de hacer el request
-      // Si no hay token, redirigir al login guardando la ruta actual
-      if (!tokenManager.isValid()) {
-        navigate('/login', { state: { from: location }, replace: true });
-        return;
-      }
-
       try {
         if (id) {
           const data = await eventService.obtenerEventoPorId(id);
@@ -134,9 +128,24 @@ const EventoDetalle: React.FC = () => {
 
   // ── Manejar botón "Comprar" ───────────────────────────────────────────────
   const handleComprar = () => {
-    if (!zonaActiva) return;
-    // ✅ Ruta corregida — coincide con App.tsx /comprar/:eventoId/zona/:zonaId
-    navigate(`/comprar/${id}/zona/${zonaActiva.zonaId}`);
+    if (!zonaActiva || !evento) return;
+
+    const pedido = {
+      eventoId: evento.eventoId,
+      eventoNombre: evento.nombre,
+      zonaId: zonaActiva.zonaId,
+      zonaNombre: zonaActiva.nombreZona,
+      cantidad: cantidadBoletas,
+      precioUnitario: zonaActiva.precio,
+      total: zonaActiva.precio * cantidadBoletas,
+    };
+
+    if (!tokenManager.isValid()) {
+      localStorage.setItem('carrito_pendiente', JSON.stringify(pedido));
+      navigate('/login');
+    } else {
+      navigate(`/pago/${zonaActiva.zonaId}`, { state: pedido });
+    }
   };
 
   // ── Renders condicionales ─────────────────────────────────────────────────
@@ -287,13 +296,41 @@ const EventoDetalle: React.FC = () => {
                 </div>
               </div>
 
+              {/* Cantidad */}
+              <div className="mb-6">
+                <p className="text-gray-700 font-bold mb-3 text-sm uppercase tracking-widest">Cantidad de boletas</p>
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={() => setCantidadBoletas(Math.max(1, cantidadBoletas - 1))}
+                    className="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center text-xl font-bold hover:border-[#1E5ADF] hover:text-[#1E5ADF] transition-colors"
+                  >
+                    −
+                  </button>
+                  <span className="text-2xl font-black w-8 text-center">{cantidadBoletas}</span>
+                  <button
+                    onClick={() => setCantidadBoletas(Math.min(zonaActiva.cuposDisponibles, cantidadBoletas + 1))}
+                    className="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center text-xl font-bold hover:border-[#1E5ADF] hover:text-[#1E5ADF] transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Total */}
+              <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl mb-6">
+                <span className="font-bold text-gray-500">Total a pagar:</span>
+                <span className="text-2xl font-black text-gray-900">
+                  ${(zonaActiva.precio * cantidadBoletas).toLocaleString('es-CO')}
+                </span>
+              </div>
+
               {/* Botón comprar */}
               <button
                 onClick={handleComprar}
                 disabled={zonaActiva.cuposDisponibles === 0}
                 className="w-full bg-[#1E5ADF] hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-2xl transition-all"
               >
-                {zonaActiva.cuposDisponibles === 0 ? 'Zona Agotada' : 'Comprar Boleto'}
+                {zonaActiva.cuposDisponibles === 0 ? 'Zona Agotada' : 'Ir a Pagar →'}
               </button>
 
               <button

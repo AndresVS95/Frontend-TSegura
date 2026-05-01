@@ -5,23 +5,22 @@ import { eventService } from '../services/eventService';
 import type { Evento } from '../types/event.types';
 
 /**
- * Dashboard del Comprador.
+ * Catálogo Principal y Dashboard del Comprador Unificado.
  */
-const DashboardBuyer: React.FC = () => {
+const Home: React.FC = () => {
   const navigate = useNavigate();
   const [nombre, setNombre] = useState('');
+  const [estaLogueado, setEstaLogueado] = useState(false);
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [isLoadingEventos, setIsLoadingEventos] = useState(true);
   const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
-    // ✅ Usa tokenManager en lugar de localStorage directo
     const user = tokenManager.getUser();
-    if (!user || user.perfil !== 'COMPRADOR') {
-      navigate('/login', { replace: true });
-      return;
+    if (user) {
+      setEstaLogueado(true);
+      setNombre(user.nombre_completo);
     }
-    setNombre(user.nombre_completo);
 
     // Cargar eventos publicados
     setIsLoadingEventos(true);
@@ -42,10 +41,16 @@ const DashboardBuyer: React.FC = () => {
   };
 
   const handleBuscar = () => {
-    // Navega al catálogo público con el término de búsqueda
-    if (busqueda.trim()) {
-      navigate(`/?q=${encodeURIComponent(busqueda)}`);
-    }
+    // Recargar eventos basados en la búsqueda
+    setIsLoadingEventos(true);
+    eventService
+      .obtenerEventosPublicados(busqueda.trim())
+      .then((data) => setEventos(data))
+      .catch((error) => {
+        console.error('Error al cargar eventos:', error);
+        setEventos([]);
+      })
+      .finally(() => setIsLoadingEventos(false));
   };
 
   return (
@@ -57,22 +62,41 @@ const DashboardBuyer: React.FC = () => {
           <span className="mr-1">💳</span> TSegura.
         </div>
         <div className="flex items-center gap-6 text-sm font-medium">
-          {/* ✅ Acceso directo a mis boletos */}
-          <button
-            onClick={() => navigate('/my-tickets')}
-            className="text-gray-600 hover:text-[#1E5ADF] font-bold transition-colors"
-          >
-            🎟️ Mis Entradas
-          </button>
-          <span className="text-gray-500">
-            Hola, <span className="font-bold text-black">{nombre}</span>
-          </span>
-          <button
-            onClick={handleLogout}
-            className="text-red-500 font-bold hover:underline"
-          >
-            Cerrar Sesión
-          </button>
+          {estaLogueado ? (
+            <>
+              {/* ✅ Acceso directo a mis boletos */}
+              <button
+                onClick={() => navigate('/my-tickets')}
+                className="text-gray-600 hover:text-[#1E5ADF] font-bold transition-colors"
+              >
+                🎟️ Mis Entradas
+              </button>
+              <span className="text-gray-500">
+                Hola, <span className="font-bold text-black">{nombre}</span>
+              </span>
+              <button
+                onClick={handleLogout}
+                className="text-red-500 font-bold hover:underline"
+              >
+                Cerrar Sesión
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={() => navigate('/login')}
+                className="text-gray-600 hover:text-[#1E5ADF] transition-colors font-bold"
+              >
+                Iniciar Sesión
+              </button>
+              <button 
+                onClick={() => navigate('/register')}
+                className="bg-[#1E5ADF] text-white px-5 py-2 rounded-xl hover:bg-blue-700 transition-colors font-bold shadow-lg shadow-blue-500/30"
+              >
+                Crear Cuenta
+              </button>
+            </>
+          )}
         </div>
       </nav>
 
@@ -143,7 +167,7 @@ const DashboardBuyer: React.FC = () => {
                 <div 
                   key={idReal ?? index} 
                   className="bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all group cursor-pointer flex flex-col"
-                  onClick={() => navigate(`/detalles/${idReal}`)}
+                  onClick={() => navigate(`/eventos/${idReal}`)}
                 >
                   <div className="h-48 bg-gray-200 relative overflow-hidden">
                     {evento.urlImagen && evento.urlImagen !== "https://ejemplo.com/imagen.jpg" ? (
@@ -185,4 +209,4 @@ const DashboardBuyer: React.FC = () => {
   );
 };
 
-export default DashboardBuyer;
+export default Home;

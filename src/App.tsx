@@ -5,11 +5,9 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
 import DashboardOrganizer from './pages/DashboardOrganizer';
-import DashboardBuyer from './pages/Home';
+import Home from './pages/Home';
 import PrivateRoute from './components/PrivateRoute';
 import CrearEvento from './pages/CrearEvento';
-import { ComprarBoletos } from './pages/ComprarBoletos';
-import CatalogoEventos from './pages/CatalogoEventos';
 import DetalleEventoOrg from './pages/DetalleEventoOrg';
 
 // Importaciones de los nuevos módulos de la Suite de Organizador
@@ -17,6 +15,13 @@ import OrganizerEvents from './pages/OrganizerEvents';
 import OrganizerFinances from './pages/OrganizerFinances';
 import OrganizerValidator from './pages/OrganizerValidator';
 import OrganizerSettings from './pages/OrganizerSettings';
+
+import EventoDetalle from './components/EventoDetalle';
+import PagoReserva from './pages/PagoReserva';
+import MisBoletos from './pages/MisBoletos';
+import ProcesandoPago from './components/ProcesandoPago';
+import ResultadoPago from './components/ResultadoPago';
+
 
 function App() {
   return (
@@ -28,26 +33,49 @@ function App() {
       />
       <Router>
         <Routes>
-          <Route path="/" element={<CatalogoEventos />} />
+          {/* Ruta pública principal (Catálogo Dinámico) */}
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* Rutas para COMPRADOR */}
+          {/* 1. Ruta para que cualquier usuario vea los detalles del evento (Pública) */}
+          <Route path="/eventos/:id" element={<EventoDetalle />} /> 
+
+          {/* 3. Ruta para el Checkout (Pantalla de Pago) */}
           <Route
-            path="/dashboard-buyer"
+            path="/pago/:zonaId"
             element={
               <PrivateRoute allowedRole="COMPRADOR">
-                <DashboardBuyer />
+                <PagoReserva />
               </PrivateRoute>
             }
           />
 
+          {/* 4. Ruta para el inventario del usuario */}
           <Route
-            path="/comprar/:eventoId/zona/:zonaId"
+            path="/my-tickets"
             element={
               <PrivateRoute allowedRole="COMPRADOR">
-                <ComprarBoletos />
+                <MisBoletos />
+              </PrivateRoute>
+            }
+          />
+
+          {/* 5. Rutas de Procesamiento y Resultado de Pago */}
+          <Route
+            path="/pago/procesando/:reservaId"
+            element={
+              <PrivateRoute allowedRole="COMPRADOR">
+                <ProcesandoPago />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/pago/resultado/:estado/:reservaId"
+            element={
+              <PrivateRoute allowedRole="COMPRADOR">
+                <ResultadoPago />
               </PrivateRoute>
             }
           />

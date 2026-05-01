@@ -74,12 +74,26 @@ export const Login: React.FC = () => {
                 throw new Error("Token inválido o expirado");
             }
 
-            if (desde !== '/') {
+            if (user.perfil === 'COMPRADOR') {
+                const carritoStr = localStorage.getItem('carrito_pendiente');
+                if (carritoStr) {
+                    try {
+                        const carritoData = JSON.parse(carritoStr);
+                        localStorage.removeItem('carrito_pendiente');
+                        navigate(`/pago/${carritoData.zonaId}`, { state: carritoData, replace: true });
+                        return;
+                    } catch (e) {
+                        localStorage.removeItem('carrito_pendiente');
+                    }
+                }
+            }
+
+            if (desde !== '/' && desde !== '/login') {
                 navigate(desde, { replace: true });
             } else if (user.perfil === 'ORGANIZADOR') {
                 navigate('/dashboard-organizer', { replace: true });
             } else if (user.perfil === 'COMPRADOR') {
-                navigate('/dashboard-buyer', { replace: true });
+                navigate('/', { replace: true }); // Ahora el catálogo único es /
             } else {
                 // ✅ Fallback seguro: catálogo, nunca a una ruta inexistente
                 console.warn(`Perfil desconocido: "${user.perfil}" — revisar campo en JWT`);
