@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TicketCard from '../components/TicketCard';
-import api from '../services/api';
+import { ticketService } from '../services/ticketService';
 
 interface Boleto {
   id: string;
@@ -13,33 +13,7 @@ interface Boleto {
   estadoNft: 'MINTED' | 'PENDING';
 }
 
-// Mock temporal mientras JG entrega GET /users/me/tickets
-const MOCK_BOLETOS: Boleto[] = [
-  {
-    id: 'TKT-001',
-    evento: 'Concierto Épico 2JC',
-    fecha: '13/11/2024',
-    lugar: 'Recinto Principal, Popayán',
-    zona: 'VIP',
-    estadoNft: 'MINTED',
-  },
-  {
-    id: 'TKT-002',
-    evento: 'Concierto Épico 2JC',
-    fecha: '13/11/2024',
-    lugar: 'Recinto Principal, Popayán',
-    zona: 'VIP',
-    estadoNft: 'MINTED',
-  },
-  {
-    id: 'TKT-003',
-    evento: 'Festival de Verano',
-    fecha: '25/12/2024',
-    lugar: 'Plaza de Toros',
-    zona: 'General',
-    estadoNft: 'PENDING',
-  },
-];
+
 
 const MisBoletos: React.FC = () => {
   const navigate = useNavigate();
@@ -53,13 +27,19 @@ const MisBoletos: React.FC = () => {
         setCargando(true);
         setError(null);
 
-        // ── REAL: activar cuando JG entregue el endpoint ──────────────────
-        // const { data } = await api.get('/api/users/me/tickets');
-        // setBoletos(data);
+        const data = await ticketService.obtenerMisBoletos();
 
-        // ── MOCK: usar mientras el backend no esté listo ──────────────────
-        await new Promise((res) => setTimeout(res, 800)); // simula latencia
-        setBoletos(MOCK_BOLETOS);
+        const boletosMapeados = data.map((b: any) => ({
+          id: b.boletoId || b.id || 'Sin ID',
+          evento: b.nombreEvento || 'Evento Desconocido',
+          fecha: b.fechaEvento || 'Fecha pendiente',
+          lugar: b.lugar || 'Ubicación en el boleto',
+          zona: b.nombreZona || 'General',
+          estadoNft: (b.estadoBoleto?.toString().trim().toUpperCase() === 'MINTED' || b.mintTxHash) 
+            ? 'MINTED' 
+            : 'PENDING',
+        }));
+        setBoletos(boletosMapeados);
 
       } catch (err: any) {
         console.error('Error al cargar boletos:', err);

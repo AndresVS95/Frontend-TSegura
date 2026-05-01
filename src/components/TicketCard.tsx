@@ -62,9 +62,8 @@ const TicketCard: React.FC<BoletoProps> = ({ boleto }) => {
           {/* ✅ Al hacer clic en el QR se abre el modal */}
           <button
             onClick={() => setModalAbierto(true)}
-            disabled={boleto.estadoNft === 'PENDING'}
-            className="w-16 h-16 bg-white border border-gray-200 rounded-lg p-1 hover:scale-105 transition-transform disabled:opacity-40 disabled:cursor-not-allowed"
-            title={boleto.estadoNft === 'PENDING' ? 'QR disponible cuando el NFT sea minteado' : 'Ver QR de entrada'}
+            className="w-16 h-16 bg-white border border-gray-200 rounded-lg p-1 hover:scale-105 transition-transform"
+            title="Ver QR de entrada"
           >
             <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${boleto.id}`}
@@ -74,7 +73,7 @@ const TicketCard: React.FC<BoletoProps> = ({ boleto }) => {
           </button>
 
           <p className="text-[9px] text-gray-400 font-medium leading-tight">
-            {boleto.estadoNft === 'PENDING' ? 'Disponible pronto' : 'Toca para ampliar'}
+            Toca para ampliar
           </p>
         </div>
       </div>

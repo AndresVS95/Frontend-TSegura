@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import OrganizerLayout from '../components/OrganizerLayout';
 import { Search, QrCode, UserCheck, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { ticketService } from '../services/ticketService';
 import { eventService } from '../services/eventService';
 import type { Evento } from '../types/event.types';
 
@@ -8,6 +10,11 @@ const OrganizerValidator: React.FC = () => {
     const [eventos, setEventos] = useState<Evento[]>([]);
     const [selectedEvento, setSelectedEvento] = useState<number | string>('');
     const [searchQuery, setSearchQuery] = useState('');
+
+    const [scannedToken, setScannedToken] = useState<string | null>(null);
+    const [status, setStatus] = useState<'IDLE' | 'LOADING' | 'VALID' | 'INVALID' | 'USED'>('IDLE');
+    const [mensaje, setMensaje] = useState<string>('');
+    const [scanActivo, setScanActivo] = useState(false);
 
     useEffect(() => {
         const fetchEventos = async () => {
@@ -17,6 +24,66 @@ const OrganizerValidator: React.FC = () => {
         };
         fetchEventos();
     }, []);
+
+    useEffect(() => {
+        if (!scanActivo) return;
+
+        const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+        
+        scanner.render(
+            (decodedText) => {
+                if (status === 'IDLE') {
+                    scanner.pause(true);
+                    validarBoleto(decodedText, scanner);
+                }
+            },
+            (error) => { /* ignorar errores de frame */ }
+        );
+
+        return () => { 
+            scanner.clear().catch(console.error); 
+        };
+    }, [scanActivo, status]);
+
+    const validarBoleto = async (token: string, scannerInstance: any) => {
+        setScannedToken(token);
+        setStatus('LOADING');
+
+        try {
+            // El backend retorna un texto plano (no JSON)
+            const data = await ticketService.validarIngreso(token);
+            
+            // Evaluamos la respuesta en texto plano
+            if (data.includes('ACCESO PERMITIDO')) {
+                setStatus('VALID');
+                setMensaje(data); // "ACCESO PERMITIDO: Boleto validado correctamente"
+            } else if (data.includes('USADO') || data.includes('ya fue')) {
+                // Previendo que el back pueda responder distinto para "ya usado" a futuro
+                setStatus('USED');
+                setMensaje('Boleto ya fue escaneado anteriormente.');
+            } else {
+                setStatus('INVALID');
+                setMensaje(data || 'Boleto falso o no reconocido.');
+            }
+        } catch (error: any) {
+            // Si el backend lanza error 500
+            setStatus('INVALID');
+            setMensaje(error.response?.data?.message || 'Error del servidor (500) o boleto inválido.');
+        }
+
+        setTimeout(() => {
+            setStatus('IDLE');
+            setScannedToken(null);
+            scannerInstance.resume();
+        }, 3000);
+    };
+
+    const getStatusColor = () => {
+        if (status === 'VALID') return 'bg-green-500 text-white';
+        if (status === 'USED') return 'bg-yellow-500 text-white';
+        if (status === 'INVALID') return 'bg-red-500 text-white';
+        return 'bg-blue-50 text-blue-600';
+    };
 
     return (
         <OrganizerLayout>
@@ -41,18 +108,54 @@ const OrganizerValidator: React.FC = () => {
                         </select>
                     </div>
 
-                    <div className="bg-[#1E5ADF] p-8 rounded-[2.5rem] text-white flex flex-col items-center text-center shadow-xl shadow-blue-500/30">
-                        <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mb-6 border border-white/30 backdrop-blur-sm">
-                            <QrCode size={40} />
+                    {/* Cámara / Panel de Estado */}
+                    {scanActivo ? (
+                        <div className="bg-white p-4 rounded-[2.5rem] shadow-xl border border-gray-100 flex flex-col">
+                            <div className="flex justify-between items-center mb-4 px-4">
+                                <h3 className="font-bold text-gray-800">Escáner Activo</h3>
+                                <button onClick={() => setScanActivo(false)} className="text-red-500 text-sm font-bold hover:underline">Detener</button>
+                            </div>
+                            
+                            {/* Lector de cámara */}
+                            <div id="reader" className="w-full rounded-2xl overflow-hidden mb-4" />
+
+                            {/* Resultado del escaneo */}
+                            {status !== 'IDLE' && status !== 'LOADING' && (
+                                <div className={`p-4 rounded-2xl shadow-inner text-center animate-bounce ${getStatusColor()}`}>
+                                    <h4 className="text-xl font-black uppercase tracking-widest">{status}</h4>
+                                    <p className="font-bold opacity-90 mt-1 text-sm">{mensaje}</p>
+                                </div>
+                            )}
+
+                            {status === 'IDLE' && (
+                                <div className="p-4 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 text-center">
+                                    <p className="font-bold animate-pulse text-sm">Esperando código QR...</p>
+                                </div>
+                            )}
+                            {status === 'LOADING' && (
+                                <div className="p-4 rounded-2xl bg-gray-50 text-gray-500 border border-gray-100 text-center flex justify-center items-center gap-2">
+                                    <span className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full" />
+                                    <p className="font-bold text-sm">Validando servidor...</p>
+                                </div>
+                            )}
                         </div>
-                        <h3 className="text-xl font-bold mb-2">Modo Escáner</h3>
-                        <p className="text-xs opacity-70 mb-8 leading-relaxed">
-                            Apunta con la cámara al código QR del NFT para validar la entrada instantáneamente.
-                        </p>
-                        <button className="w-full bg-white text-[#1E5ADF] py-4 rounded-2xl font-black hover:bg-blue-50 transition-all flex items-center justify-center gap-2">
-                            Activar Cámara
-                        </button>
-                    </div>
+                    ) : (
+                        <div className="bg-[#1E5ADF] p-8 rounded-[2.5rem] text-white flex flex-col items-center text-center shadow-xl shadow-blue-500/30">
+                            <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mb-6 border border-white/30 backdrop-blur-sm">
+                                <QrCode size={40} />
+                            </div>
+                            <h3 className="text-xl font-bold mb-2">Modo Escáner</h3>
+                            <p className="text-xs opacity-70 mb-8 leading-relaxed">
+                                Apunta con la cámara al código QR del NFT para validar la entrada instantáneamente.
+                            </p>
+                            <button 
+                                onClick={() => setScanActivo(true)}
+                                className="w-full bg-white text-[#1E5ADF] py-4 rounded-2xl font-black hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+                            >
+                                Activar Cámara
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Buscador Manual y Lista de Ingresos */}

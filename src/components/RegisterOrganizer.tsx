@@ -1,15 +1,10 @@
 import React from 'react';
-import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement } from '@stripe/react-stripe-js';
 import { Input } from './Input';
 import { Button } from './Button';
 import { Select } from './Select';
 import { useRegisterOrganizer } from '../hooks/useRegisterOrganizer';
-
-const stripePromise = loadStripe(
-  import.meta.env.VITE_STRIPE_PUBLIC_KEY ||
-  'pk_test_51TH9MdLKUrQZ6U0BtOJUb71r2kNLRgMU2L3n0CQICRB5z3RE5xgSJtLjVuF1zJTdJMdho4Gq3TvOapWaeKuDj70W00P8C74S7v'
-);
+import { stripePromise } from '../config/stripe';
 
 interface Props {
   onBack: () => void;

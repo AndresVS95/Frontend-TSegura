@@ -1,14 +1,15 @@
 // src/pages/PagoReserva.tsx
 import React, { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import api from '../services/api';
-
-const stripePromise = loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
+import { tokenManager } from '../lib/tokenManager';
+import { stripePromise } from '../config/stripe';
 
 interface PedidoState {
+  eventoId: number;
   eventoNombre: string;
+  zonaId: number;
   zonaNombre: string;
   cantidad: number;
   precioUnitario: number;
@@ -16,36 +17,57 @@ interface PedidoState {
 }
 
 // ─── Formulario Stripe ────────────────────────────────────────────────────────
-const FormularioPago: React.FC<{ total: number }> = ({ total }) => {
+const FormularioPago: React.FC<{ pedido: PedidoState; total: number }> = ({ pedido, total }) => {
+  console.log('🔑 LLAVE PÚBLICA USADA:', import.meta.env.VITE_STRIPE_PUBLIC_KEY || 'pk_test_51TH9MdLKUrQZ6U0BtOJUb71r2kNLRgMU2L3n0CQICRB5z3RE5xgSJtLjVuF1zJTdJMdho4Gq3TvOapWaeKuDj70W00P8C74S7v');
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
   const { reservaId } = useParams();
 
+  const [cedula, setCedula] = useState('');
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stripe || !elements) return;
+    if (!stripe || !elements || !cedula.trim()) return;
     setProcesando(true);
     setError(null);
 
     try {
-      const { data } = await api.post('/api/payments/create-intent', { reservaId });
-      const { clientSecret } = data;
-      const result = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: { card: elements.getElement(CardElement)! },
+      // 1. Crear el PaymentMethod localmente en el Frontend usando Stripe JS
+      const result = await stripe.createPaymentMethod({
+        type: 'card',
+        card: elements.getElement(CardElement)!,
       });
+
       if (result.error) {
-        setError(result.error.message || 'Error en el pago');
+        setError(result.error.message || 'Error al procesar la tarjeta');
         setProcesando(false);
-      } else if (result.paymentIntent?.status === 'succeeded') {
-        navigate(`/pago/procesando/${reservaId}`);
+        return;
       }
-    } catch {
-      console.warn('⚠️ Backend no disponible. Simulando flujo.');
-      setTimeout(() => navigate(`/pago/procesando/${reservaId || 'prueba-123'}`), 1500);
+
+      // 2. Extraer datos del usuario y armar el DTO esperado por el backend
+      const user = tokenManager.getUser();
+      const payload = {
+        zonaEventoId: pedido.zonaId,
+        cantidad: pedido.cantidad,
+        cedulaComprador: cedula,
+        nombreComprador: user?.nombre_completo || 'Cliente TSegura',
+        paymentMethodId: result.paymentMethod.id
+      };
+
+      // 3. Enviar el pago y la creación del boleto al backend
+      console.log('🚀 ENVIANDO COMPRA AL BACK:', payload);
+      await api.post('/api/ventas/automatica', payload);
+      
+      // 4. Si es exitoso, ir a la pantalla de éxito
+      navigate(`/pago/procesando/${reservaId || 'exito'}`);
+      
+    } catch (err: any) {
+      console.error('Error en checkout:', err);
+      setError(err.response?.data?.message || 'Error al comunicarse con el servidor.');
+      setProcesando(false);
     }
   };
 
@@ -53,13 +75,28 @@ const FormularioPago: React.FC<{ total: number }> = ({ total }) => {
     <form onSubmit={handleSubmit} className="bg-white p-8 rounded-[2rem] shadow-xl border border-gray-100">
       <h3 className="text-2xl font-black text-gray-900 mb-6">Detalles de Pago</h3>
 
-      <div className="mb-6 p-4 border-2 border-gray-200 rounded-xl bg-gray-50">
-        <CardElement options={{
-          style: {
-            base: { fontSize: '16px', color: '#424770', '::placeholder': { color: '#aab7c4' } },
-            invalid: { color: '#9e2146' },
-          },
-        }} />
+      <div className="mb-4">
+        <label className="block text-sm font-bold text-gray-700 mb-2">Cédula del Comprador</label>
+        <input 
+          type="text" 
+          value={cedula}
+          onChange={(e) => setCedula(e.target.value)}
+          placeholder="Ej: 1023456789"
+          required
+          className="w-full bg-gray-50 border-2 border-gray-200 p-4 rounded-xl font-medium text-gray-800 focus:ring-2 focus:ring-[#1E5ADF] focus:border-transparent outline-none transition-all"
+        />
+      </div>
+
+      <div className="mb-6">
+        <label className="block text-sm font-bold text-gray-700 mb-2">Tarjeta de Crédito</label>
+        <div className="p-4 border-2 border-gray-200 rounded-xl bg-gray-50">
+          <CardElement options={{
+            style: {
+              base: { fontSize: '16px', color: '#424770', '::placeholder': { color: '#aab7c4' } },
+              invalid: { color: '#9e2146' },
+            },
+          }} />
+        </div>
       </div>
 
       {error && <div className="text-red-500 text-sm font-bold mb-4 p-3 bg-red-50 rounded-lg">{error}</div>}
@@ -151,7 +188,13 @@ const PagoReserva: React.FC = () => {
           {/* ── Formulario Stripe ── */}
           <div>
             <Elements stripe={stripePromise}>
-              <FormularioPago total={totalFinal} />
+              {pedido ? (
+                <FormularioPago pedido={pedido} total={totalFinal} />
+              ) : (
+                <div className="bg-red-50 p-6 rounded-2xl text-red-600 font-bold">
+                  Error: No se encontraron los datos del pedido. Vuelve al catálogo.
+                </div>
+              )}
             </Elements>
           </div>
         </div>
