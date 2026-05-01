@@ -1,1 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
+
+:root {
+  --font-main: 'Manrope', sans-serif;
+  --primary-blue: #1E5ADF;
+  --text-dark: #0F172A;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-main);
+  background-color: #f8fafc;
+  color: var(--text-dark);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Patrón: Primera palabra negra · Segunda azul */
+.premium-title {
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+.premium-title span {
+  color: var(--primary-blue);
+}
+
+/* Ajustes globales de tipografía */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-main);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+button {
+  font-family: var(--font-main);
+  font-weight: 700;
+}

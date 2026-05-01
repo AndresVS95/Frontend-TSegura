@@ -4,8 +4,8 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { eventService } from '../services/eventService';
 import MapaInteractivo from '../components/MapaInteractivo';
 import { tokenManager } from '../lib/tokenManager';
+import Navbar from '../components/Navbar';
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
 interface Zona {
   zonaId: string | number;
   nombreZona: string;
@@ -15,7 +15,7 @@ interface Zona {
 }
 
 interface Evento {
-  eventoId: number;       // ✅ corregido: el backend devuelve eventoId, no eventId
+  eventoId: number;
   nombre: string;
   descripcion?: string;
   urlImagen?: string;
@@ -26,23 +26,8 @@ interface Evento {
   zonas?: Zona[];
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Convierte el nombre de zona del backend al ID que usa el mapa SVG */
 const normalizarZonaId = (nombre: string): string => nombre.toUpperCase().trim();
 
-/** Calcula el color del badge de disponibilidad */
-const getBadgeStyle = (cupos: number): string =>
-  cupos === 0
-    ? 'bg-red-100 text-red-700'
-    : cupos < 20
-    ? 'bg-amber-100 text-amber-700'
-    : 'bg-green-100 text-green-700';
-
-const getBadgeLabel = (cupos: number): string =>
-  cupos === 0 ? 'Agotada' : cupos < 20 ? `¡Solo ${cupos} cupos!` : `${cupos} disponibles`;
-
-// ─── Componente Principal ─────────────────────────────────────────────────────
 const EventoDetalle: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -50,37 +35,31 @@ const EventoDetalle: React.FC = () => {
 
   const [evento, setEvento] = useState<Evento | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Estado del mapa y panel lateral
   const [zonaSeleccionada, setZonaSeleccionada] = useState<string | null>(null);
   const [disponibilidad, setDisponibilidad] = useState<Record<string, 'DISPONIBLE' | 'AGOTADO'>>({});
   const [cantidadBoletas, setCantidadBoletas] = useState<number>(1);
 
-  // ── Carga inicial del evento ──────────────────────────────────────────────
   useEffect(() => {
     const cargarDatos = async () => {
       try {
+        setLoading(true);
         if (id) {
           const data = await eventService.obtenerEventoPorId(id);
           setEvento(data);
-
           if (data.zonas) {
             const dispInicial: Record<string, 'DISPONIBLE' | 'AGOTADO'> = {};
             data.zonas.forEach((z: Zona) => {
-              dispInicial[normalizarZonaId(z.nombreZona)] =
-                z.cuposDisponibles > 0 ? 'DISPONIBLE' : 'AGOTADO';
+              dispInicial[normalizarZonaId(z.nombreZona)] = z.cuposDisponibles > 0 ? 'DISPONIBLE' : 'AGOTADO';
             });
             setDisponibilidad(dispInicial);
           }
         }
       } catch (error: any) {
-        // ✅ Si el backend devuelve 403, redirigir al login
         if (error?.response?.status === 403 || error?.response?.status === 401) {
           tokenManager.remove();
           navigate('/login', { state: { from: location }, replace: true });
           return;
         }
-        console.error('Error al cargar detalle:', error);
       } finally {
         setLoading(false);
       }
@@ -88,16 +67,11 @@ const EventoDetalle: React.FC = () => {
     cargarDatos();
   }, [id, navigate, location]);
 
-  // ── Polling de disponibilidad cada 15s (HU-007) ──────────────────────────
   const fetchDisponibilidad = useCallback(async () => {
     if (!id) return;
     try {
-      // Endpoint esperado: GET /events/{id}/zones/availability
-      // Respuesta esperada: { VIP: 'DISPONIBLE', PLATA: 'AGOTADO', GENERAL: 'DISPONIBLE' }
       const data = await eventService.obtenerDisponibilidadZonas(id);
       setDisponibilidad(data);
-
-      // Actualizar cupos en el estado del evento también
       setEvento((prev) => {
         if (!prev || !prev.zonas) return prev;
         const updatedZonas = prev.zonas.map((z) => {
@@ -107,29 +81,37 @@ const EventoDetalle: React.FC = () => {
         return { ...prev, zonas: updatedZonas };
       });
     } catch (error) {
-      // Silencioso: no interrumpe la UX si falla el polling
-      console.warn('Polling disponibilidad falló (se reintentará):', error);
+      console.warn('Polling disponibilidad falló:', error);
     }
   }, [id]);
 
   useEffect(() => {
-    // No arrancar el polling hasta que el evento haya cargado
     if (!evento) return;
 
-    fetchDisponibilidad(); // llamada inmediata al montar
-    const intervalo = setInterval(fetchDisponibilidad, 15_000); // cada 15 segundos
-    return () => clearInterval(intervalo); // limpieza al desmontar
+    const tick = () => {
+      // Solo hacer la petición si la pestaña es visible (ahorro de servidor)
+      if (document.visibilityState === 'visible') {
+        fetchDisponibilidad();
+      }
+    };
+
+    fetchDisponibilidad();
+    const intervalo = setInterval(tick, 20_000); // Aumentamos a 20s para mayor relax del server
+    return () => clearInterval(intervalo);
   }, [evento, fetchDisponibilidad]);
 
-  // ── Zona activa (la que coincide con zonaSeleccionada) ────────────────────
+  if (loading) return <div className="min-h-screen bg-white flex items-center justify-center">Cargando...</div>;
+  if (!evento) return <div className="text-center py-20">Evento no encontrado.</div>;
+
+  // ── Datos dinámicos seguros ──
+  const nombreOrg = (evento as any).organizadorNombre || (evento as any).usuarioNombre || 'Organizador Verificado';
+
   const zonaActiva: Zona | undefined = evento?.zonas?.find(
     (z) => normalizarZonaId(z.nombreZona) === zonaSeleccionada
   );
 
-  // ── Manejar botón "Comprar" ───────────────────────────────────────────────
   const handleComprar = () => {
     if (!zonaActiva || !evento) return;
-
     const pedido = {
       eventoId: evento.eventoId,
       eventoNombre: evento.nombre,
@@ -139,7 +121,6 @@ const EventoDetalle: React.FC = () => {
       precioUnitario: zonaActiva.precio,
       total: zonaActiva.precio * cantidadBoletas,
     };
-
     if (!tokenManager.isValid()) {
       localStorage.setItem('carrito_pendiente', JSON.stringify(pedido));
       navigate('/login');
@@ -148,244 +129,139 @@ const EventoDetalle: React.FC = () => {
     }
   };
 
-  // ── Renders condicionales ─────────────────────────────────────────────────
-  if (loading)
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-4 border-[#1E5ADF] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-gray-500 font-medium">Cargando detalles del evento…</p>
-        </div>
-      </div>
-    );
-
-  if (!evento)
-    return (
-      <div className="text-center py-20">
-        <p className="text-gray-500 text-xl">Evento no encontrado.</p>
-        <button
-          onClick={() => navigate(-1)}
-          className="mt-4 text-[#1E5ADF] font-semibold hover:underline"
-        >
-          ← Volver al catálogo
-        </button>
-      </div>
-    );
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* ── Botón Volver ── */}
-      <div className="max-w-6xl mx-auto p-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-gray-600 hover:text-[#1E5ADF] font-semibold transition-colors"
-        >
-          ← Volver al catálogo
-        </button>
-      </div>
+    <div className="min-h-screen bg-white">
+      <Navbar />
 
-      <main className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* ══════════════════════════════════════════════════════════════
-            COLUMNA IZQUIERDA: Imagen e info del evento (2 columnas)
-        ══════════════════════════════════════════════════════════════ */}
-        <div className="lg:col-span-2 space-y-8">
-          <img
-            src={evento.urlImagen || 'https://via.placeholder.com/800x400'}
-            alt={evento.nombre}
-            className="w-full h-[380px] object-cover rounded-[2.5rem] shadow-2xl"
-          />
-
-          <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100">
-            <h1 className="text-4xl font-black text-gray-900 mb-4">{evento.nombre}</h1>
-            <p className="text-gray-500 leading-relaxed text-lg mb-8">
-              {evento.descripcion || 'Sin descripción disponible para este evento.'}
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-gray-100">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                  Fecha y Hora
-                </span>
-                <p className="text-lg font-bold text-gray-800 mt-1">
-                  {evento.fechaEvento} — {evento.horaEvento}
-                </p>
-              </div>
-              <div>
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                  Lugar
-                </span>
-                <p className="text-lg font-bold text-gray-800 mt-1">
-                  {evento.nombreRecinto || 'Recinto Principal'}
-                </p>
-              </div>
+      {/* ── Banner Principal ── */}
+      <div className="relative h-[450px] overflow-hidden">
+        <img 
+          src={evento.urlImagen || 'https://via.placeholder.com/1920x600'} 
+          className="w-full h-full object-cover" 
+          alt={evento.nombre} 
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] via-[#0F172A]/40 to-transparent" />
+        
+        <div className="absolute bottom-0 left-0 w-full p-12 text-white">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-4 mb-4">
+              <span className="bg-[#1E5ADF] text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Música</span>
+              <span className="bg-amber-400 text-[#0F172A] text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Más vendido</span>
+            </div>
+            <h1 className="text-7xl font-black leading-none mb-4">
+              {evento.nombre} <span className="text-amber-400">2026</span>
+            </h1>
+            <div className="flex items-center gap-6 text-sm font-bold text-gray-300">
+              <span className="flex items-center gap-2">📍 {evento.nombreRecinto || 'Coliseo del Pueblo, Popayán'}</span>
+              <span className="flex items-center gap-2">📅 {evento.fechaEvento} · {evento.horaEvento}</span>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* ══════════════════════════════════════════════════════════════
-            COLUMNA DERECHA: Mapa + Panel de zona seleccionada
-        ══════════════════════════════════════════════════════════════ */}
-        <div className="space-y-6">
-
-          {/* ── Mapa interactivo ── */}
-          <div className="bg-white p-4 rounded-[2.5rem] shadow-xl border border-gray-100">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 ml-2">
-              Mapa del Recinto
-            </h3>
-            <div className="aspect-square bg-gray-50 rounded-[1.5rem] overflow-hidden flex items-center justify-center">
-              <MapaInteractivo
-                modoInteractivo={true}
-                zonaSeleccionada={zonaSeleccionada}
-                onZonaClick={setZonaSeleccionada}
-                disponibilidad={disponibilidad}
-              />
+      <main className="max-w-7xl mx-auto px-12 py-16 grid grid-cols-1 lg:grid-cols-3 gap-16">
+        {/* Columna Izquierda: Info */}
+        <div className="lg:col-span-2 space-y-16">
+          
+          <section>
+            <div className="mb-6">
+              <span className="bg-blue-50 text-[#1E5ADF] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">Minted on Polygon Amoy</span>
             </div>
-            <p className="text-xs text-gray-400 text-center mt-2">
-              Toca una zona para ver detalles
+            <h2 className="premium-title text-4xl mb-6">Sobre <span>el evento</span></h2>
+            <p className="text-gray-400 text-lg leading-relaxed mb-10">
+              {evento.descripcion || 'Una noche para celebrar la riqueza musical del Cauca. Acordeones, cajas y guacharacas se encuentran con artistas invitados nacionales en un show de tres horas.'}
             </p>
-          </div>
 
-          {/* ── Panel de zona seleccionada (HU-007) ── */}
-          {zonaActiva ? (
-            <div className="bg-white p-7 rounded-[2rem] shadow-xl border-2 border-[#1E5ADF] transition-all animate-fade-in">
-              {/* Cabecera */}
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-xl font-black text-gray-900">
-                  Zona {zonaActiva.nombreZona}
-                </h2>
-                <span
-                  className={`text-xs font-bold px-3 py-1 rounded-full ${getBadgeStyle(
-                    zonaActiva.cuposDisponibles
-                  )}`}
-                >
-                  {getBadgeLabel(zonaActiva.cuposDisponibles)}
-                </span>
-              </div>
-
-              {/* Precio */}
-              <div className="mb-5">
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                  Precio por boleto
-                </span>
-                <p className="text-3xl font-black text-[#1E5ADF] mt-1">
-                  ${zonaActiva.precio.toLocaleString('es-CO')}
-                  <span className="text-sm font-normal text-gray-400 ml-1">COP</span>
-                </p>
-              </div>
-
-              {/* Barra de ocupación */}
-              <div className="mb-6">
-                <div className="flex justify-between text-xs text-gray-400 mb-1">
-                  <span>Ocupación</span>
-                  <span>
-                    {zonaActiva.capacidadTotal - zonaActiva.cuposDisponibles} /{' '}
-                    {zonaActiva.capacidadTotal}
-                  </span>
+            {/* Grid de 4 Cards de Info */}
+            <div className="grid grid-cols-2 gap-6">
+              {[
+                { label: 'Organizador', value: nombreOrg, sub: 'Verificado - Miembro TSegura' },
+                { label: 'Recinto', value: evento.nombreRecinto || 'Coliseo del Pueblo', sub: 'Confirmado' },
+                { label: 'Apertura', value: '7:00 PM', sub: `Show ${evento.horaEvento}` },
+                { label: 'Capacidad', value: '4.200 personas', sub: 'Disponibilidad en tiempo real' }
+              ].map((card, i) => (
+                <div key={i} className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
+                  <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-2">{card.label}</p>
+                  <p className="text-lg font-black text-[#0F172A] mb-1">{card.value}</p>
+                  <p className="text-xs text-gray-400">{card.sub}</p>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-2">
-                  <div
-                    className="bg-[#1E5ADF] h-2 rounded-full transition-all duration-700"
-                    style={{
-                      width: `${
-                        ((zonaActiva.capacidadTotal - zonaActiva.cuposDisponibles) /
-                          zonaActiva.capacidadTotal) *
-                        100
-                      }%`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Cantidad */}
-              <div className="mb-6">
-                <p className="text-gray-700 font-bold mb-3 text-sm uppercase tracking-widest">Cantidad de boletas</p>
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={() => setCantidadBoletas(Math.max(1, cantidadBoletas - 1))}
-                    className="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center text-xl font-bold hover:border-[#1E5ADF] hover:text-[#1E5ADF] transition-colors"
-                  >
-                    −
-                  </button>
-                  <span className="text-2xl font-black w-8 text-center">{cantidadBoletas}</span>
-                  <button
-                    onClick={() => setCantidadBoletas(Math.min(zonaActiva.cuposDisponibles, cantidadBoletas + 1))}
-                    className="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center text-xl font-bold hover:border-[#1E5ADF] hover:text-[#1E5ADF] transition-colors"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              {/* Total */}
-              <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl mb-6">
-                <span className="font-bold text-gray-500">Total a pagar:</span>
-                <span className="text-2xl font-black text-gray-900">
-                  ${(zonaActiva.precio * cantidadBoletas).toLocaleString('es-CO')}
-                </span>
-              </div>
-
-              {/* Botón comprar */}
-              <button
-                onClick={handleComprar}
-                disabled={zonaActiva.cuposDisponibles === 0}
-                className="w-full bg-[#1E5ADF] hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-2xl transition-all"
-              >
-                {zonaActiva.cuposDisponibles === 0 ? 'Zona Agotada' : 'Ir a Pagar →'}
-              </button>
-
-              <button
-                onClick={() => setZonaSeleccionada(null)}
-                className="w-full mt-2 text-sm text-gray-400 hover:text-gray-600 transition-colors py-1"
-              >
-                Deseleccionar zona
-              </button>
+              ))}
             </div>
-          ) : (
-            /* ── Estado vacío: instrucción para el usuario ── */
-            <div className="bg-white p-7 rounded-[2rem] shadow-sm border border-gray-100 text-center">
-              <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-[#1E5ADF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          </section>
+
+          <section>
+            <h2 className="premium-title text-3xl mb-8">Cómo <span>funciona</span></h2>
+            <div className="space-y-6">
+              {[
+                'Compra y recibe tu ticket NFT en tu wallet automático.',
+                'Presenta el QR el día del evento; se valida en blockchain.',
+                'Si no puedes ir, ponlo en reventa al precio que el organizador definió.'
+              ].map((step, i) => (
+                <div key={i} className="flex items-start gap-4">
+                  <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center text-[#1E5ADF] text-xs font-black flex-shrink-0 mt-1">
+                    {i + 1}
+                  </div>
+                  <p className="text-gray-400 font-medium">{step}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* Columna Derecha: Sidebar de Zonas (Mockup Style) */}
+        <div className="space-y-8">
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl shadow-gray-100 border border-gray-50">
+             <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-[#1E5ADF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                 </svg>
               </div>
-              <h3 className="font-bold text-gray-700 mb-2">Selecciona una zona</h3>
-              <p className="text-sm text-gray-400">
-                Haz clic en cualquier zona del mapa para ver precios y disponibilidad.
-              </p>
-
-              {/* Lista compacta de zonas disponibles */}
-              <div className="mt-5 space-y-2">
+              <h3 className="premium-title text-2xl text-center mb-6">Selecciona <span>una zona</span></h3>
+              
+              <div className="space-y-4 mb-8">
                 {evento.zonas?.map((z) => (
                   <button
                     key={z.zonaId}
-                    onClick={() =>
-                      disponibilidad[normalizarZonaId(z.nombreZona)] !== 'AGOTADO' &&
-                      setZonaSeleccionada(normalizarZonaId(z.nombreZona))
-                    }
+                    onClick={() => disponibilidad[normalizarZonaId(z.nombreZona)] !== 'AGOTADO' && setZonaSeleccionada(normalizarZonaId(z.nombreZona))}
                     disabled={disponibilidad[normalizarZonaId(z.nombreZona)] === 'AGOTADO'}
-                    className="w-full flex justify-between items-center p-3 rounded-xl border border-gray-100 hover:border-[#1E5ADF] hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-left"
+                    className={`w-full flex items-center p-5 rounded-3xl border-2 transition-all text-left ${zonaSeleccionada === normalizarZonaId(z.nombreZona) ? 'border-[#1E5ADF] bg-blue-50/30 shadow-lg shadow-blue-50' : 'border-gray-50 hover:border-blue-100'}`}
                   >
-                    <span className="font-semibold text-gray-700 text-sm">{z.nombreZona}</span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[#1E5ADF] font-bold text-sm">
-                        ${z.precio.toLocaleString('es-CO')}
-                      </span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${getBadgeStyle(z.cuposDisponibles)}`}>
-                        {getBadgeLabel(z.cuposDisponibles)}
-                      </span>
+                    <div className="flex-grow">
+                      <p className="font-black text-gray-800 text-sm leading-tight uppercase">{z.nombreZona}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[#1E5ADF] font-black text-base">${z.precio.toLocaleString('es-CO')}</span>
                     </div>
                   </button>
                 ))}
               </div>
-            </div>
-          )}
 
-          {/* Nota legal */}
-          {evento.edadMinima && (
-            <p className="text-xs text-gray-400 text-center">
-              * Edad mínima requerida: {evento.edadMinima} años
-            </p>
-          )}
+              {zonaActiva && (
+                <div className="animate-fade-in space-y-6">
+                  <div className="flex flex-col gap-4 bg-gray-50 p-6 rounded-3xl">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Cantidad</p>
+                    <div className="flex items-center justify-center space-x-6">
+                      <button onClick={() => setCantidadBoletas(Math.max(1, cantidadBoletas - 1))} className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center font-bold text-[#1E5ADF] hover:bg-blue-50 transition-all">−</button>
+                      <span className="text-2xl font-black w-6 text-center">{cantidadBoletas}</span>
+                      <button onClick={() => setCantidadBoletas(Math.min(zonaActiva.cuposDisponibles, cantidadBoletas + 1))} className="w-10 h-10 rounded-xl bg-blue-600 shadow-sm flex items-center justify-center font-bold text-white hover:bg-blue-700 transition-all">+</button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center px-2">
+                    <span className="text-gray-400 font-bold">Subtotal</span>
+                    <span className="text-2xl font-black text-gray-900">${(zonaActiva.precio * cantidadBoletas).toLocaleString('es-CO')} <span className="text-xs text-gray-400">COP</span></span>
+                  </div>
+
+                  <button onClick={handleComprar} className="w-full bg-[#1E5ADF] hover:bg-blue-700 text-white font-black py-5 rounded-3xl shadow-xl shadow-blue-200 transition-all active:scale-[0.98]">
+                    Comprar Ticket NFT
+                  </button>
+                </div>
+              )}
+          </div>
+
+          <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100">
+             <MapaInteractivo modoInteractivo={true} zonaSeleccionada={zonaSeleccionada} onZonaClick={setZonaSeleccionada} disponibilidad={disponibilidad} />
+          </div>
         </div>
       </main>
     </div>

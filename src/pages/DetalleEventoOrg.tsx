@@ -19,7 +19,7 @@ const DetalleEventoOrg: React.FC = () => {
     if (!id) return;
     try {
       setLoading(true);
-      const data = await eventService.obtenerDatosEvento(id);
+      const data = await eventService.obtenerEventoPorId(id);
       setEvento(data);
     } catch (error: any) {
       toast.error('Error al cargar detalles del evento');
@@ -138,7 +138,7 @@ const DetalleEventoOrg: React.FC = () => {
             <tbody className="divide-y divide-gray-50">
               {evento.zonas?.map((zona, idx) => {
                   const vendidos = eventMetrics.obtenerVendidosPorZona(zona);
-                  const porcentaje = Math.round((vendidos / zona.capacidad) * 100);
+                  const porcentaje = Math.round((vendidos / (zona.capacidadTotal || 1)) * 100);
                   
                   return (
                     <tr key={idx} className="hover:bg-gray-50/50 transition-colors">

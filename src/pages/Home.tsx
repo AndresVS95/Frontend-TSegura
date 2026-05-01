@@ -3,13 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { tokenManager } from '../lib/tokenManager';
 import { eventService } from '../services/eventService';
 import type { Evento } from '../types/event.types';
+import Navbar from '../components/Navbar';
 
-/**
- * Catálogo Principal y Dashboard del Comprador Unificado.
- */
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const [nombre, setNombre] = useState('');
   const [estaLogueado, setEstaLogueado] = useState(false);
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [isLoadingEventos, setIsLoadingEventos] = useState(true);
@@ -19,191 +16,135 @@ const Home: React.FC = () => {
     const user = tokenManager.getUser();
     if (user) {
       setEstaLogueado(true);
-      setNombre(user.nombre_completo);
     }
-
-    // Cargar eventos publicados
     setIsLoadingEventos(true);
-    eventService
-      .obtenerEventosPublicados()
+    eventService.obtenerEventosPublicados()
       .then((data) => setEventos(data))
-      .catch((error) => {
-        console.error('Error al cargar eventos:', error);
-        setEventos([]);
-      })
+      .catch(() => setEventos([]))
       .finally(() => setIsLoadingEventos(false));
-  }, [navigate]);
-
-  const handleLogout = () => {
-    // ✅ Usa tokenManager en lugar de localStorage directo
-    tokenManager.clearAll();
-    navigate('/login', { replace: true });
-  };
+  }, []);
 
   const handleBuscar = () => {
-    // Recargar eventos basados en la búsqueda
     setIsLoadingEventos(true);
-    eventService
-      .obtenerEventosPublicados(busqueda.trim())
+    eventService.obtenerEventosPublicados(busqueda.trim())
       .then((data) => setEventos(data))
       .catch((error) => {
-        console.error('Error al cargar eventos:', error);
+        console.error('Error al buscar eventos:', error);
         setEventos([]);
       })
       .finally(() => setIsLoadingEventos(false));
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-white">
+      {/* ── Navbar Premium Centralizada ── */}
+      <Navbar />
 
-      {/* ── Navbar ── */}
-      <nav className="bg-white py-4 px-8 flex justify-between items-center border-b border-gray-100">
-        <div className="text-[#1E5ADF] font-black text-2xl flex items-center">
-          <span className="mr-1">💳</span> TSegura.
+      {/* ── Hero Section ── */}
+      <div className="max-w-7xl mx-auto px-12 pt-16">
+        <div className="mb-4">
+          <span className="bg-pink-50 text-pink-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">Popayán · Junio 2026</span>
         </div>
-        <div className="flex items-center gap-6 text-sm font-medium">
-          {estaLogueado ? (
-            <>
-              {/* ✅ Acceso directo a mis boletos */}
-              <button
-                onClick={() => navigate('/my-tickets')}
-                className="text-gray-600 hover:text-[#1E5ADF] font-bold transition-colors"
-              >
-                🎟️ Mis Entradas
-              </button>
-              <span className="text-gray-500">
-                Hola, <span className="font-bold text-black">{nombre}</span>
-              </span>
-              <button
-                onClick={handleLogout}
-                className="text-red-500 font-bold hover:underline"
-              >
-                Cerrar Sesión
-              </button>
-            </>
-          ) : (
-            <>
-              <button 
-                onClick={() => navigate('/login')}
-                className="text-gray-600 hover:text-[#1E5ADF] transition-colors font-bold"
-              >
-                Iniciar Sesión
-              </button>
-              <button 
-                onClick={() => navigate('/register')}
-                className="bg-[#1E5ADF] text-white px-5 py-2 rounded-xl hover:bg-blue-700 transition-colors font-bold shadow-lg shadow-blue-500/30"
-              >
-                Crear Cuenta
-              </button>
-            </>
-          )}
-        </div>
-      </nav>
+        <h1 className="premium-title text-[72px] leading-[0.9] mb-4">
+          Próximos <span>Eventos.</span>
+        </h1>
+        <p className="text-gray-400 font-medium text-lg mb-12 max-w-2xl">
+          Compra tu entrada como NFT en la blockchain de Polygon. Reventa segura y sin falsificaciones.
+        </p>
 
-      <div className="max-w-5xl mx-auto mt-10">
-        {/* ── Hero ── */}
-        <div className="bg-[#1E5ADF] rounded-[3rem] p-16 text-white text-center shadow-2xl relative overflow-hidden">
-          <h1 className="text-5xl font-black mb-6 leading-tight">
-            Encuentra tu próximo<br />evento inolvidable
-          </h1>
-          <p className="text-blue-100 text-lg mb-10 max-w-2xl mx-auto">
-            Explora conciertos, conferencias y festivales con la seguridad que solo TSegura te ofrece.
-          </p>
-
-          <div className="bg-white rounded-full p-2 flex items-center max-w-xl mx-auto shadow-lg">
-            <input
-              type="text"
-              placeholder="Buscar eventos, artistas o lugares..."
-              className="flex-grow px-6 py-2 text-gray-700 outline-none rounded-full"
+        {/* Búsqueda Estilo Mockup */}
+        <div className="flex items-center gap-4 bg-white border border-gray-100 shadow-2xl shadow-gray-100/50 rounded-[2rem] p-3 max-w-3xl mb-20">
+          <div className="pl-6 flex-grow flex items-center gap-3">
+            <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <input 
+              type="text" 
+              placeholder="¿Qué quieres ver hoy? (Ej: Rock, Teatro...)" 
+              className="w-full outline-none text-gray-700 font-bold placeholder:text-gray-300"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
             />
-            <button
-              onClick={handleBuscar}
-              className="bg-[#1E5ADF] text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 transition-all"
-            >
-              Buscar
-            </button>
           </div>
-        </div>
-      </div>
-
-      {/* ── Categorías ── */}
-      <div className="flex justify-center gap-3 my-12">
-        {['Todos', 'Conciertos', 'Teatro', 'Deportes', 'Festivales'].map((cat, i) => (
-          <button
-            key={i}
-            className={`px-6 py-2 rounded-full border ${
-              i === 0
-                ? 'bg-white border-gray-300 shadow-sm'
-                : 'border-gray-200 text-gray-400'
-            } font-bold text-sm hover:border-blue-500 hover:text-blue-500 transition-all`}
+          <button 
+            onClick={handleBuscar}
+            className="bg-[#1E5ADF] text-white px-10 py-4 rounded-[1.5rem] font-black text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
-            {cat}
+            Buscar
           </button>
-        ))}
-      </div>
+        </div>
 
-      {/* ── Grid de eventos ── */}
-      <div className="max-w-7xl mx-auto px-8 pb-20">
-        <h2 className="text-2xl font-black text-[#03292e] mb-8 px-2">Eventos Destacados</h2>
-        
-        {isLoadingEventos ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map(n => <div key={n} className="h-72 bg-gray-200 animate-pulse rounded-[2.5rem]" />)}
-          </div>
-        ) : eventos.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm">
-            <span className="text-5xl mb-4 block">📭</span>
-            <h4 className="text-xl font-bold text-gray-800 mb-2">No hay eventos publicados aún</h4>
-            <p className="text-gray-500">Vuelve más tarde para descubrir nuevas experiencias.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {eventos.map((evento, index) => {
-              const idReal = evento.eventoId || (evento as any).id;
-              return (
-                <div 
-                  key={idReal ?? index} 
-                  className="bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all group cursor-pointer flex flex-col"
-                  onClick={() => navigate(`/eventos/${idReal}`)}
-                >
-                  <div className="h-48 bg-gray-200 relative overflow-hidden">
-                    {evento.urlImagen && evento.urlImagen !== "https://ejemplo.com/imagen.jpg" ? (
-                      <img src={evento.urlImagen} alt={evento.nombre} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-blue-100 to-[#1E5ADF]/20 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
-                         <span className="text-5xl drop-shadow-md">🎫</span>
-                      </div>
-                    )}
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-lg text-xs font-bold text-[#1E5ADF]">
-                      Próximamente
+        {/* Categorías */}
+        <div className="flex flex-wrap gap-4 mb-16">
+          {['Todos', 'Música', 'Teatro', 'Comedia', 'Cultura'].map((cat, i) => (
+            <button key={cat} className={`px-8 py-3 rounded-2xl font-black text-xs transition-all ${i === 0 ? 'bg-[#1E5ADF] text-white shadow-xl shadow-blue-100' : 'bg-white text-gray-400 border border-gray-100 hover:border-gray-200'}`}>
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Grid de Eventos con Estilo Mockup */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 pb-32">
+          {isLoadingEventos ? (
+             [1,2,3].map(n => <div key={n} className="h-[450px] bg-gray-50 rounded-[2.5rem] animate-pulse" />)
+          ) : eventos.map((evento, i) => {
+            const gradients = [
+              'from-purple-500 to-pink-500',
+              'from-amber-400 to-orange-500',
+              'from-blue-500 to-indigo-600',
+              'from-emerald-400 to-cyan-500',
+              'from-rose-500 to-red-600'
+            ];
+            const grad = gradients[i % gradients.length];
+
+            return (
+              <div 
+                key={evento.eventoId} 
+                onClick={() => navigate(`/eventos/${evento.eventoId}`)}
+                className="bg-white rounded-[2.5rem] border border-gray-50 shadow-sm hover:shadow-2xl transition-all group cursor-pointer overflow-hidden flex flex-col"
+              >
+                {/* Imagen con Gradiente de Fondo */}
+                <div className={`h-64 bg-gradient-to-br ${grad} relative p-8 flex items-end justify-center`}>
+                  <div className="absolute top-6 left-6 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                    <span className="text-[9px] font-black text-white uppercase tracking-widest">NFT Ticket</span>
+                  </div>
+                  {evento.urlImagen && evento.urlImagen !== "https://ejemplo.com/imagen.jpg" ? (
+                     <img src={evento.urlImagen} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-700" alt="" />
+                  ) : null}
+                  <span className="text-white font-black text-center text-xs uppercase tracking-[0.2em] opacity-40 mix-blend-overlay">
+                    {evento.nombre}
+                  </span>
+                </div>
+
+                <div className="p-8 flex flex-col flex-grow">
+                  <span className="text-pink-500 font-black text-[10px] uppercase tracking-widest mb-3">Música</span>
+                  <h3 className="text-2xl font-black text-[#0F172A] mb-4 group-hover:text-[#1E5ADF] transition-colors">{evento.nombre}</h3>
+                  
+                  <div className="space-y-2 mb-8">
+                    <div className="flex items-center gap-2 text-gray-400 text-xs font-bold">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      {(evento as any).nombreRecinto || 'Popayán'}
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-400 text-xs font-bold">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                      {evento.fechaEvento} · {evento.horaEvento}
                     </div>
                   </div>
-                  <div className="p-6 flex-1 flex flex-col">
-                    <p className="text-[#1E5ADF] font-bold text-xs uppercase tracking-widest mb-2">
-                      {evento.tipoEventoId === 1 ? 'Concierto' : 'Evento'}
-                    </p>
-                    <h4 className="text-xl font-bold text-[#03292e] mb-2 group-hover:text-[#1E5ADF] transition-colors truncate">
-                      {evento.nombre}
-                    </h4>
-                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
-                      <span>📍 {(evento as any).nombreRecinto || 'Popayán, Cauca'}</span>
-                      <span>•</span>
-                      <span>📅 {evento.fechaEvento}</span>
+
+                  <div className="mt-auto flex items-center justify-between pt-6 border-t border-gray-50">
+                    <div>
+                      <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Desde</p>
+                      <p className="text-xl font-black text-[#0F172A]">$45.000 <span className="text-[10px] text-gray-400">COP</span></p>
                     </div>
-                    <div className="mt-auto pt-4">
-                      <button className="w-full py-3 bg-gray-50 text-[#03292e] font-bold rounded-2xl group-hover:bg-[#1E5ADF] group-hover:text-white transition-all">
-                        Ver Entradas
-                      </button>
-                    </div>
+                    <button className="text-[#1E5ADF] font-black text-xs flex items-center gap-1 group-hover:gap-2 transition-all">
+                      Ver más <span className="text-lg">→</span>
+                    </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
