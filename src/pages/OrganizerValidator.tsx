@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import React, { useState, useEffect, useRef } from 'react';
 import OrganizerLayout from '../components/OrganizerLayout';
 import { Search, QrCode, UserCheck, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { ticketService } from '../services/ticketService';
@@ -15,6 +14,7 @@ const OrganizerValidator: React.FC = () => {
     const [status, setStatus] = useState<'IDLE' | 'LOADING' | 'VALID' | 'INVALID' | 'USED'>('IDLE');
     const [mensaje, setMensaje] = useState<string>('');
     const [scanActivo, setScanActivo] = useState(false);
+    const scanBufferRef = useRef<string>('');
 
     useEffect(() => {
         const fetchEventos = async () => {
@@ -25,59 +25,64 @@ const OrganizerValidator: React.FC = () => {
         fetchEventos();
     }, []);
 
+        // Dentro de tu useEffect en OrganizerValidator.tsx
     useEffect(() => {
-        if (!scanActivo) return;
-
-        const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
-        
-        scanner.render(
-            (decodedText) => {
-                if (status === 'IDLE') {
-                    scanner.pause(true);
-                    validarBoleto(decodedText, scanner);
-                }
-            },
-            (error) => { /* ignorar errores de frame */ }
-        );
-
-        return () => { 
-            scanner.clear().catch(console.error); 
-        };
-    }, [scanActivo, status]);
-
-    const validarBoleto = async (token: string, scannerInstance: any) => {
-        setScannedToken(token);
-        setStatus('LOADING');
-
-        try {
-            // El backend retorna un texto plano (no JSON)
-            const data = await ticketService.validarIngreso(token);
-            
-            // Evaluamos la respuesta en texto plano
-            if (data.includes('ACCESO PERMITIDO')) {
-                setStatus('VALID');
-                setMensaje(data); // "ACCESO PERMITIDO: Boleto validado correctamente"
-            } else if (data.includes('USADO') || data.includes('ya fue')) {
-                // Previendo que el back pueda responder distinto para "ya usado" a futuro
-                setStatus('USED');
-                setMensaje('Boleto ya fue escaneado anteriormente.');
-            } else {
-                setStatus('INVALID');
-                setMensaje(data || 'Boleto falso o no reconocido.');
-            }
-        } catch (error: any) {
-            // Si el backend lanza error 500
-            setStatus('INVALID');
-            setMensaje(error.response?.data?.message || 'Error del servidor (500) o boleto inválido.');
+        if (!scanActivo) {
+            scanBufferRef.current = '';
+            return;
         }
 
-        setTimeout(() => {
-            setStatus('IDLE');
-            setScannedToken(null);
-            scannerInstance.resume();
-        }, 3000);
-    };
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const token = scanBufferRef.current.trim();
+                console.log("TOKEN CAPTURADO:", token); // DEBUG
+                
+                if (token && token.length > 10) { // Un JWT siempre es largo
+                    processToken(token);
+                }
+                scanBufferRef.current = ''; // Limpiar buffer
+            } else if (e.key === 'Escape') {
+                scanBufferRef.current = '';
+            } else if (e.key.length === 1) {
+                // Capturar solo caracteres visibles
+                scanBufferRef.current += e.key;
+            }
+        };
 
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [scanActivo, status]); // Depende de ambos
+
+    const processToken = async (token: string) => {
+        //la pistola está en español, el token llegará perfecto.
+        const tokenLimpio = token.trim();
+
+        setScannedToken(tokenLimpio);
+        setStatus('LOADING');
+        try {
+            await ticketService.validarIngreso(tokenLimpio);
+            setStatus('VALID');
+            setMensaje("¡Acceso Autorizado!");
+
+            setTimeout(() => {
+                setStatus('IDLE');
+                setMensaje('');
+                setScannedToken(null);
+            }, 5000); // 5 segundos para el mensaje de éxito
+
+        } catch (error: any) {
+            setStatus('INVALID');
+            const msgError = error.response?.data?.message || "Error al validar";
+            setMensaje(msgError);
+
+            setTimeout(() => {
+                setStatus('IDLE');
+                setMensaje('');
+                setScannedToken(null);
+            }, 3000);
+        }
+    };
     const getStatusColor = () => {
         if (status === 'VALID') return 'bg-green-500 text-white';
         if (status === 'USED') return 'bg-yellow-500 text-white';
@@ -108,16 +113,21 @@ const OrganizerValidator: React.FC = () => {
                         </select>
                     </div>
 
-                    {/* Cámara / Panel de Estado */}
+                    {/* Scanner Activo / Panel de Estado */}
                     {scanActivo ? (
                         <div className="bg-white p-4 rounded-[2.5rem] shadow-xl border border-gray-100 flex flex-col">
                             <div className="flex justify-between items-center mb-4 px-4">
-                                <h3 className="font-bold text-gray-800">Escáner Activo</h3>
+                                <h3 className="font-bold text-gray-800">Scanner Activo</h3>
                                 <button onClick={() => setScanActivo(false)} className="text-red-500 text-sm font-bold hover:underline">Detener</button>
                             </div>
-                            
-                            {/* Lector de cámara */}
-                            <div id="reader" className="w-full rounded-2xl overflow-hidden mb-4" />
+
+                            {/* Mostrar QR escaneado */}
+                            {scannedToken && (
+                                <div className="mb-4 p-3 rounded-2xl bg-gray-50 border border-gray-200">
+                                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Código QR Escaneado:</p>
+                                    <p className="font-mono text-sm text-gray-800 break-all">{scannedToken}</p>
+                                </div>
+                            )}
 
                             {/* Resultado del escaneo */}
                             {status !== 'IDLE' && status !== 'LOADING' && (
@@ -129,7 +139,7 @@ const OrganizerValidator: React.FC = () => {
 
                             {status === 'IDLE' && (
                                 <div className="p-4 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 text-center">
-                                    <p className="font-bold animate-pulse text-sm">Esperando código QR...</p>
+                                    <p className="font-bold animate-pulse text-sm">Esperando escaneo de QR...</p>
                                 </div>
                             )}
                             {status === 'LOADING' && (
@@ -144,15 +154,15 @@ const OrganizerValidator: React.FC = () => {
                             <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mb-6 border border-white/30 backdrop-blur-sm">
                                 <QrCode size={40} />
                             </div>
-                            <h3 className="text-xl font-bold mb-2">Modo Escáner</h3>
+                            <h3 className="text-xl font-bold mb-2">Scanner de Pistola</h3>
                             <p className="text-xs opacity-70 mb-8 leading-relaxed">
-                                Apunta con la cámara al código QR del NFT para validar la entrada instantáneamente.
+                                Escanea el código QR con la pistola lectora para validar la entrada instantáneamente.
                             </p>
                             <button 
                                 onClick={() => setScanActivo(true)}
                                 className="w-full bg-white text-[#1E5ADF] py-4 rounded-2xl font-black hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
                             >
-                                Activar Cámara
+                                Activar Scanner
                             </button>
                         </div>
                     )}
