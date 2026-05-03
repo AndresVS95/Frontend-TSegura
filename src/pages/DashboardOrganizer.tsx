@@ -43,7 +43,7 @@ const DashboardOrganizer: React.FC = () => {
       </div>
       <h3 className="font-black text-gray-900 mb-2">{title}</h3>
       <p className="text-xs text-gray-400 font-medium leading-relaxed">{desc}</p>
-      <div className="mt-4 flex items-center gap-1 text-[#1E5ADF] text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="mt-4 flex items-center gap-1 text-[#2748E8] text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
         Ir ahora <ArrowRight size={12} />
       </div>
     </button>

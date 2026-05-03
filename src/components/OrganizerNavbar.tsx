@@ -12,7 +12,7 @@ export const OrganizerNavbar = () => {
   return (
     <nav className="bg-white px-8 py-4 shadow-sm border-b border-gray-100 flex justify-between items-center sticky top-0 z-50">
       <h1 
-        className="text-2xl font-bold text-[#1E5ADF] flex items-center gap-2 cursor-pointer"
+        className="text-2xl font-bold text-[#2748E8] flex items-center gap-2 cursor-pointer"
         onClick={() => navigate('/dashboard-organizer')}
       >
         <span className="text-3xl">🎫</span> TSegura (Organizer)

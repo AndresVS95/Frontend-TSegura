@@ -43,6 +43,14 @@ export const eventService = {
     return response.data;
   },
 
+  /** Finalizar Evento (HU-023) - Placeholder para Backend */
+  finalizarEvento: async (eventoId: number): Promise<any> => {
+    // Aún no implementado en backend, simulamos error controlado o respuesta
+    console.warn(`Intentando finalizar evento ${eventoId} - Endpoint pendiente en Backend`);
+    // return api.post(`/api/eventos/${eventoId}/finalizar`);
+    throw new Error("El servicio de finalización de eventos estará disponible próximamente en el backend.");
+  },
+
   obtenerEventosPublicados: async (query: string = '') => {
     // Solución temporal: Como el backend no tiene el endpoint /publicados, 
     // traemos todos y filtramos en el frontend para no bloquear el desarrollo.

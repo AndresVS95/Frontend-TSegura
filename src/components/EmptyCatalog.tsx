@@ -10,7 +10,7 @@ const EmptyCatalog: React.FC = () => {
       </p>
       <button 
         onClick={() => window.location.reload()}
-        className="mt-8 text-[#1E5ADF] font-bold hover:underline"
+        className="mt-8 text-[#2748E8] font-bold hover:underline"
       >
         Actualizar página
       </button>

@@ -68,7 +68,7 @@ export const ForgotPassword: React.FC = () => {
         <div className="min-h-screen flex flex-col md:flex-row bg-white">
 
             {/* Mitad Izquierda: Panel Azul (Cambia el texto mágicamente según el paso) */}
-            <div className="hidden md:flex md:w-5/12 bg-[#1E5ADF] text-white p-12 flex-col justify-between relative overflow-hidden transition-all duration-500">
+            <div className="hidden md:flex md:w-5/12 bg-[#2748E8] text-white p-12 flex-col justify-between relative overflow-hidden transition-all duration-500">
                 <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
                     <div className="w-full h-full bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-white to-transparent"></div>
                 </div>
@@ -158,7 +158,7 @@ export const ForgotPassword: React.FC = () => {
                             <div className="pt-4 space-y-3">
                                 <Button type="submit" variant="primary">Verificar código</Button>
                                 <p className="text-center text-sm text-gray-500 mt-4">
-                                    ¿No recibiste nada? <button type="button" className="text-[#1E5ADF] hover:underline">Reenviar código</button>
+                                    ¿No recibiste nada? <button type="button" className="text-[#2748E8] hover:underline">Reenviar código</button>
                                 </p>
                             </div>
                         </form>

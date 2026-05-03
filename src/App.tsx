@@ -21,6 +21,7 @@ import PagoReserva from './pages/PagoReserva';
 import MisBoletos from './pages/MisBoletos';
 import ProcesandoPago from './components/ProcesandoPago';
 import ResultadoPago from './components/ResultadoPago';
+import PanelAsistentesZona from './components/PanelAsistentesZona';
 
 
 function App() {
@@ -140,6 +141,15 @@ function App() {
             element={
               <PrivateRoute allowedRole="ORGANIZADOR">
                 <OrganizerSettings />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/asistentes/:eventoId/:zonaId"
+            element={
+              <PrivateRoute allowedRole="ORGANIZADOR">
+                <PanelAsistentesZona />
               </PrivateRoute>
             }
           />

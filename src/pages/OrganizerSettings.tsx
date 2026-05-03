@@ -14,7 +14,7 @@ const OrganizerSettings: React.FC = () => {
                 {/* Perfil */}
                 <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 flex items-center justify-between">
                     <div className="flex items-center gap-6">
-                        <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center text-3xl font-black text-[#1E5ADF]">
+                        <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center text-3xl font-black text-[#2748E8]">
                             O
                         </div>
                         <div>
@@ -22,7 +22,7 @@ const OrganizerSettings: React.FC = () => {
                             <p className="text-sm text-gray-500 font-medium">Gestiona tu identidad de marca.</p>
                         </div>
                     </div>
-                    <button className="text-sm font-bold text-[#1E5ADF] bg-blue-50 px-6 py-2 rounded-xl hover:bg-blue-100 transition-colors">Editar</button>
+                    <button className="text-sm font-bold text-[#2748E8] bg-blue-50 px-6 py-2 rounded-xl hover:bg-blue-100 transition-colors">Editar</button>
                 </div>
 
                 {/* Secciones de Configuración */}

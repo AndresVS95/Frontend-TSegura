@@ -39,14 +39,14 @@ const OrganizerFinances: React.FC = () => {
                     <div>
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 block">Saldo Total Recaudado</span>
                         <div className="flex items-baseline gap-2">
-                            <span className="text-5xl font-black text-[#1E5ADF]">${recaudoTotal.toLocaleString()}</span>
+                            <span className="text-5xl font-black text-[#2748E8]">${recaudoTotal.toLocaleString()}</span>
                             <span className="text-xl font-bold text-gray-400">USD</span>
                         </div>
                         <p className="text-sm text-green-600 font-bold mt-4 flex items-center gap-1">
                             <CheckCircle2 size={16} /> Todos tus fondos están protegidos por Stripe.
                         </p>
                     </div>
-                    <button className="bg-[#1E5ADF] text-white px-8 py-4 rounded-2xl font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2">
+                    <button className="bg-[#2748E8] text-white px-8 py-4 rounded-2xl font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2">
                         Retirar Fondos <ArrowUpRight size={20} />
                     </button>
                 </div>

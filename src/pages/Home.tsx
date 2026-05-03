@@ -11,6 +11,9 @@ const Home: React.FC = () => {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [isLoadingEventos, setIsLoadingEventos] = useState(true);
   const [busqueda, setBusqueda] = useState('');
+  const [categoriaActiva, setCategoriaActiva] = useState('Todos');
+
+  const CATEGORIAS = ['Todos', 'Música', 'Teatro', 'Comedia', 'Cultura'];
 
   useEffect(() => {
     const user = tokenManager.getUser();
@@ -34,6 +37,13 @@ const Home: React.FC = () => {
       })
       .finally(() => setIsLoadingEventos(false));
   };
+
+  const eventosFiltrados = categoriaActiva === 'Todos'
+    ? eventos
+    : eventos.filter((e: any) => {
+        const tipo = (e.tipoEvento || e.categoria || e.nombreTipo || '').toLowerCase();
+        return tipo.includes(categoriaActiva.toLowerCase());
+      });
 
   return (
     <div className="min-h-screen bg-white">
@@ -67,7 +77,7 @@ const Home: React.FC = () => {
           </div>
           <button 
             onClick={handleBuscar}
-            className="bg-[#1E5ADF] text-white px-10 py-4 rounded-[1.5rem] font-black text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="bg-[#2748E8] text-white px-10 py-4 rounded-[1.5rem] font-black text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             Buscar
           </button>
@@ -75,8 +85,12 @@ const Home: React.FC = () => {
 
         {/* Categorías */}
         <div className="flex flex-wrap gap-4 mb-16">
-          {['Todos', 'Música', 'Teatro', 'Comedia', 'Cultura'].map((cat, i) => (
-            <button key={cat} className={`px-8 py-3 rounded-2xl font-black text-xs transition-all ${i === 0 ? 'bg-[#1E5ADF] text-white shadow-xl shadow-blue-100' : 'bg-white text-gray-400 border border-gray-100 hover:border-gray-200'}`}>
+          {CATEGORIAS.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategoriaActiva(cat)}
+              className={`px-8 py-3 rounded-2xl font-black text-xs transition-all ${cat === categoriaActiva ? 'bg-[#2748E8] text-white shadow-xl shadow-blue-100' : 'bg-white text-gray-400 border border-gray-100 hover:border-gray-200'}`}
+            >
               {cat}
             </button>
           ))}
@@ -86,7 +100,11 @@ const Home: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 pb-32">
           {isLoadingEventos ? (
              [1,2,3].map(n => <div key={n} className="h-[450px] bg-gray-50 rounded-[2.5rem] animate-pulse" />)
-          ) : eventos.map((evento, i) => {
+          ) : eventosFiltrados.length === 0 ? (
+            <div className="col-span-3 py-20 text-center">
+              <p className="text-gray-300 font-black text-lg">No hay eventos en esta categoría.</p>
+            </div>
+          ) : eventosFiltrados.map((evento, i) => {
             const gradients = [
               'from-purple-500 to-pink-500',
               'from-amber-400 to-orange-500',
@@ -118,7 +136,7 @@ const Home: React.FC = () => {
 
                 <div className="p-8 flex flex-col flex-grow">
                   <span className="text-pink-500 font-black text-[10px] uppercase tracking-widest mb-3">Música</span>
-                  <h3 className="text-2xl font-black text-[#0F172A] mb-4 group-hover:text-[#1E5ADF] transition-colors">{evento.nombre}</h3>
+                  <h3 className="text-2xl font-black text-[#0D0D0D] mb-4 group-hover:text-[#2748E8] transition-colors">{evento.nombre}</h3>
                   
                   <div className="space-y-2 mb-8">
                     <div className="flex items-center gap-2 text-gray-400 text-xs font-bold">
@@ -134,9 +152,17 @@ const Home: React.FC = () => {
                   <div className="mt-auto flex items-center justify-between pt-6 border-t border-gray-50">
                     <div>
                       <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Desde</p>
-                      <p className="text-xl font-black text-[#0F172A]">$45.000 <span className="text-[10px] text-gray-400">COP</span></p>
+                      {(() => {
+                        const zonas = (evento as any).zonas as Array<{ precio: number }> | undefined;
+                        const precioMin = zonas && zonas.length > 0
+                          ? Math.min(...zonas.map(z => z.precio))
+                          : null;
+                        return precioMin !== null
+                          ? <p className="text-xl font-black text-[#0D0D0D]">${precioMin.toLocaleString('es-CO')} <span className="text-[10px] text-gray-400">COP</span></p>
+                          : <p className="text-sm font-black text-gray-300">Ver precios</p>;
+                      })()}
                     </div>
-                    <button className="text-[#1E5ADF] font-black text-xs flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <button className="text-[#2748E8] font-black text-xs flex items-center gap-1 group-hover:gap-2 transition-all">
                       Ver más <span className="text-lg">→</span>
                     </button>
                   </div>

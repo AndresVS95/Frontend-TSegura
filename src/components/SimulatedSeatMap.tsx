@@ -26,7 +26,7 @@ export default function SimulatedSeatMap({ asientos, onToggleAsiento }: Props) {
   // Función para obtener el color de la silla según su estado
   const getSeatColor = (estado: AsientoSimulado['estado']) => {
     switch (estado) {
-      case 'SELECCIONADO': return '#1E5ADF'; // Azul TSegura
+      case 'SELECCIONADO': return '#2748E8'; // Azul TSegura
       case 'OCUPADO': return '#ef4444'; // Rojo (Tailwind red-500)
       default: return '#cbd5e1'; // Gris Disponible (Tailwind slate-300)
     }
@@ -38,7 +38,7 @@ export default function SimulatedSeatMap({ asientos, onToggleAsiento }: Props) {
       {/* Leyenda de colores */}
       <div className="flex justify-center gap-6 mb-6 text-xs font-bold text-gray-600 border-b pb-4">
         <div className="flex items-center gap-2"><rect className="w-4 h-4 rounded bg-slate-300" /> Disponible</div>
-        <div className="flex items-center gap-2"><rect className="w-4 h-4 rounded bg-[#1E5ADF]" /> Tu Selección</div>
+        <div className="flex items-center gap-2"><rect className="w-4 h-4 rounded bg-[#2748E8]" /> Tu Selección</div>
         <div className="flex items-center gap-2"><rect className="w-4 h-4 rounded bg-red-500" /> Ocupado</div>
       </div>
 

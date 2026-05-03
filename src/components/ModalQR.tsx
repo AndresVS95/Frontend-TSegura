@@ -75,7 +75,7 @@ const ModalQR: React.FC<ModalQRProps> = ({ isOpen, onClose, boleto }) => {
         <h3 className="text-2xl font-black text-gray-900 leading-tight mb-1">
           {boleto.evento}
         </h3>
-        <p className="text-[#1E5ADF] font-bold text-sm mb-6">Zona {boleto.zona}</p>
+        <p className="text-[#2748E8] font-bold text-sm mb-6">Zona {boleto.zona}</p>
 
         {/* Contenedor del QR dinámico */}
         <div className="bg-white border-4 border-gray-100 p-4 rounded-3xl mx-auto w-64 h-64 mb-4 shadow-inner flex flex-col items-center justify-center relative overflow-hidden">
@@ -85,14 +85,14 @@ const ModalQR: React.FC<ModalQRProps> = ({ isOpen, onClose, boleto }) => {
             <p className="text-red-500 font-bold text-sm">Error al cargar el código.</p>
           ) : qrToken ? (
             <>
-              <div className="absolute inset-0 border-t-2 border-[#1E5ADF]/30 animate-[scan_2s_ease-in-out_infinite] pointer-events-none" />
+              <div className="absolute inset-0 border-t-2 border-[#2748E8]/30 animate-[scan_2s_ease-in-out_infinite] pointer-events-none" />
               <QRCodeSVG value={qrToken} size={200} level="H" />
             </>
           ) : null}
         </div>
 
         <p className="text-xs text-gray-400 font-bold mb-6">
-          Se actualiza en <span className="text-[#1E5ADF]">{timeLeft}s</span>
+          Código de seguridad · se renueva en <span className="text-[#2748E8]">{timeLeft}s</span>
         </p>
 
         <p className="font-mono text-gray-400 text-xs mb-4 tracking-widest">

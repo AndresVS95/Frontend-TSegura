@@ -1,56 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Input } from './Input';
 import { Button } from './Button';
 import { Select } from './Select';
 import { useRegisterBuyer } from '../hooks/useRegisterBuyer';
+import { ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
 
 interface Props {
     onBack: () => void;
 }
 
-// ─── SUB-COMPONENTES ───────────────────────────────────────────────────────
-
-const RegistrationHeader = ({ onBack }: { onBack: () => void }) => (
-    <header className="mb-10 text-left">
-        <button
-            type="button"
-            onClick={onBack}
-            className="text-xs font-bold text-gray-400 hover:text-blue-600 flex items-center gap-1 mb-4 transition-colors uppercase tracking-widest group"
-        >
-            <span className="text-lg group-hover:-translate-x-1 transition-transform">‹</span> 
-            Volver al inicio
-        </button>
-        <h2 className="text-2xl font-bold text-gray-900 leading-tight">Crear cuenta</h2>
-        <p className="text-sm text-gray-600 mt-1">
-            ¿Ya tienes una cuenta?{' '}
-            <Link to="/login" className="text-blue-600 font-bold hover:underline">
-                Ingresa aquí
-            </Link>
-        </p>
-    </header>
-);
-
-const LegalSection = () => (
-    <div className="mt-8 space-y-5">
-        <div className="flex items-start gap-3">
-            <input type="checkbox" className="mt-1 h-5 w-5 text-[#1E5ADF] border-gray-300 rounded cursor-pointer" required />
-            <label className="text-xs text-gray-500 leading-tight">
-                Acepto la <span className="text-blue-600 font-bold underline cursor-pointer">Política de privacidad</span>, su anexo de privacidad para ciudadanos colombianos y los <span className="text-blue-600 font-bold underline cursor-pointer">Términos y condiciones</span> de TSegura y autorizo el tratamiento de mis datos personales.
-            </label>
-        </div>
-
-        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-            <p className="text-[10px] text-gray-400 leading-relaxed text-justify">
-                Autorizo a TSegura a realizar el tratamiento de mis datos personales con las finalidades de prestar el servicio y/o bien ofertado, procesar la transacción y establecer una comunicación por sí mismo o mediante terceros con información, encuestas, noticias, ofertas, promociones, publicidad o actividades propias, de nuestros anunciantes o terceros vinculados.
-            </p>
-        </div>
-    </div>
-);
-
-// ─── COMPONENTE PRINCIPAL ──────────────────────────────────────────────────
-
 export const RegisterBuyer: React.FC<Props> = ({ onBack }) => {
+    const [step, setStep] = useState(1);
     const {
         formData,
         errors,
@@ -61,123 +22,148 @@ export const RegisterBuyer: React.FC<Props> = ({ onBack }) => {
         handleSubmit
     } = useRegisterBuyer(onBack);
 
+    const nextStep = () => setStep(prev => prev + 1);
+    const prevStep = () => setStep(prev => prev - 1);
+
     return (
-        <div className="animate-fade-in max-w-xl mx-auto px-2">
-            <RegistrationHeader onBack={onBack} />
+        <div className="animate-in slide-in-from-right duration-500 w-full">
+            {/* Header / Step Indicator */}
+            <div className="flex items-center justify-between mb-8">
+                <button
+                    type="button"
+                    onClick={step === 1 ? onBack : prevStep}
+                    className="flex items-center gap-2 text-[10px] font-black text-gray-400 hover:text-[#2748E8] transition-all uppercase tracking-widest group"
+                >
+                    <ChevronLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+                    {step === 1 ? 'Volver al inicio' : 'Paso anterior'}
+                </button>
+                <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
+                    PASO 0{step}/02
+                </span>
+            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Progress Bar Line */}
+            <div className="flex gap-2 mb-10">
+                <div className={`h-1 flex-1 rounded-full ${step >= 1 ? 'bg-[#2748E8]' : 'bg-gray-100'}`} />
+                <div className={`h-1 flex-1 rounded-full ${step >= 2 ? 'bg-[#2748E8]' : 'bg-gray-100'}`} />
+            </div>
 
-                {/* ─── SECCIÓN 1: DATOS PERSONALES ─── */}
-                <div className="space-y-5">
-                    <Input
-                        label="Nombre completo"
-                        placeholder="Nombre y Apellidos"
-                        value={formData.fullname}
-                        onChange={(e) => handleChange('fullname', e.target.value)}
-                    />
-                    {errors.fullname && <p className="text-red-500 text-xs font-bold mt-[-12px]">{errors.fullname}</p>}
+            <div className="mb-10">
+                <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-none mb-4">
+                    Datos <span className="text-[#2748E8]">del Comprador.</span>
+                </h2>
+                <p className="text-pink-500 text-[10px] font-bold uppercase tracking-widest">
+                    Los campos marcados con * son obligatorios.
+                </p>
+            </div>
 
-                    <Select
-                        label="País de residencia"
-                        options={[{ value: 'Colombia', label: 'Colombia' }]}
-                        value={formData.pais}
-                        onChange={(e) => handleChange('pais', e.target.value)}
-                    />
+            <form onSubmit={handleSubmit} className="space-y-8">
+                {step === 1 && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-right duration-500">
+                        <div>
+                            <Input
+                                label="Nombre completo*"
+                                placeholder="Escribe tu nombre y apellidos"
+                                value={formData.fullname}
+                                onChange={(e) => handleChange('fullname', e.target.value)}
+                            />
+                            {errors.fullname && <p className="text-red-500 text-[10px] font-bold mt-2 uppercase">{errors.fullname}</p>}
+                        </div>
 
-                    <Input
-                        label="Teléfono"
-                        placeholder="Número de teléfono (Ej: 3001234567)"
-                        value={formData.telefono}
-                        onChange={(e) => handleChange('telefono', e.target.value)}
-                    />
-                    {errors.telefono && <p className="text-red-500 text-xs font-bold mt-[-12px]">{errors.telefono}</p>}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <Select
+                                label="Tipo Doc.*"
+                                options={[{ value: 'CC', label: 'C.C.' }]}
+                                value={formData.tipoDocumento}
+                                onChange={(e) => handleChange('tipoDocumento', e.target.value)}
+                            />
+                            <Input
+                                label="Número de documento*"
+                                placeholder="1061722..."
+                                value={formData.numeroDocumento}
+                                onChange={(e) => handleChange('numeroDocumento', e.target.value)}
+                            />
+                        </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <Select
-                            label="Tipo de documento"
-                            options={[{ value: 'CC', label: 'Cédula de Ciudadanía' }]}
-                            value={formData.tipoDocumento}
-                            onChange={(e) => handleChange('tipoDocumento', e.target.value)}
-                        />
-                        <Input
-                            label="Número de Documento"
-                            placeholder="Ej: 1234567890"
-                            value={formData.numeroDocumento}
-                            onChange={(e) => handleChange('numeroDocumento', e.target.value)}
-                        />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <Input
+                                label="Fecha de nacimiento*"
+                                type="date"
+                                value={formData.fechaNacimiento}
+                                onChange={(e) => handleChange('fechaNacimiento', e.target.value)}
+                            />
+                            <Select
+                                label="Género*"
+                                options={[
+                                    { value: 'Masculino', label: 'Masculino' },
+                                    { value: 'Femenino', label: 'Femenino' },
+                                    { value: 'Otro', label: 'Otro' }
+                                ]}
+                                value={formData.genero}
+                                onChange={(e) => handleChange('genero', e.target.value)}
+                            />
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={nextStep}
+                            className="w-full mt-6 bg-[#2748E8] text-white py-5 rounded-[2rem] font-black shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 group"
+                        >
+                            Continuar <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                        </button>
                     </div>
-                    {errors.numeroDocumento && <p className="text-red-500 text-xs font-bold mt-[-12px]">{errors.numeroDocumento}</p>}
+                )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <Input
-                            label="Fecha de Nacimiento"
-                            type="date"
-                            value={formData.fechaNacimiento}
-                            onChange={(e) => handleChange('fechaNacimiento', e.target.value)}
-                        />
-                        <Select
-                            label="Género"
-                            options={[
-                                { value: 'Masculino', label: 'Masculino' },
-                                { value: 'Femenino', label: 'Femenino' },
-                                { value: 'Otro', label: 'Selecciona tu género' }
-                            ]}
-                            value={formData.genero}
-                            onChange={(e) => handleChange('genero', e.target.value)}
-                        />
+                {step === 2 && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-right duration-500">
+                        <div>
+                            <Input
+                                label="Correo electrónico*"
+                                type="email"
+                                placeholder="tu@correo.com"
+                                value={formData.email}
+                                onChange={(e) => handleChange('email', e.target.value)}
+                            />
+                            {errors.email && <p className="text-red-500 text-[10px] font-bold mt-2 uppercase">{errors.email}</p>}
+                        </div>
+
+                        <div className="relative">
+                            <Input
+                                label="Contraseña*"
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Crea una clave segura"
+                                value={formData.password}
+                                onChange={(e) => handleChange('password', e.target.value)}
+                                rightElement={
+                                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-[10px] font-black text-[#2748E8] hover:underline px-2">
+                                        {showPassword ? "OCULTAR" : "MOSTRAR"}
+                                    </button>
+                                }
+                            />
+                            {errors.password && <p className="text-red-500 text-[10px] font-bold mt-2 uppercase">{errors.password}</p>}
+                        </div>
+
+                        <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100 flex items-start gap-4">
+                            <CheckCircle2 className="text-[#2748E8] shrink-0 mt-1" size={20} />
+                            <p className="text-xs text-gray-500 leading-relaxed font-medium">
+                                Al registrarte, aceptas nuestros <span className="text-[#2748E8] font-bold underline cursor-pointer">Términos de Servicio</span> y la <span className="text-[#2748E8] font-bold underline cursor-pointer">Privacidad de Datos</span> respaldada por tecnología Blockchain.
+                            </p>
+                        </div>
+
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            className="w-full py-5 text-base font-black bg-[#2748E8] hover:bg-blue-700 text-white rounded-[2rem] shadow-xl shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> Creando cuenta...</>
+                            ) : (
+                                "Verificar y Continuar"
+                            )}
+                        </Button>
                     </div>
-                    {errors.fechaNacimiento && <p className="text-red-500 text-xs font-bold mt-[-12px]">{errors.fechaNacimiento}</p>}
-                </div>
-
-                <hr className="border-gray-100 my-8" />
-
-                {/* ─── SECCIÓN 2: CREDENCIALES (AL FINAL) ─── */}
-                <div className="space-y-5">
-                    <Input
-                        label="Correo electrónico"
-                        type="email"
-                        placeholder="tu@correo.com"
-                        value={formData.email}
-                        onChange={(e) => handleChange('email', e.target.value)}
-                    />
-                    {errors.email && <p className="text-red-500 text-xs font-bold mt-[-12px]">{errors.email}</p>}
-
-                    <Input
-                        label="Contraseña"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Mínimo 8 caracteres"
-                        value={formData.password}
-                        onChange={(e) => handleChange('password', e.target.value)}
-                        rightElement={
-                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-xs font-bold text-[#1E5ADF]">
-                                {showPassword ? "OCULTAR" : "MOSTRAR"}
-                            </button>
-                        }
-                    />
-                    {errors.password && <p className="text-red-500 text-xs font-bold mt-[-12px]">{errors.password}</p>}
-
-                    <Input
-                        label="Confirmar Contraseña"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Repite tu contraseña"
-                        value={formData.confirmPassword}
-                        onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                    />
-                    {errors.confirmPassword && <p className="text-red-500 text-xs font-bold mt-[-12px]">{errors.confirmPassword}</p>}
-                </div>
-
-                <LegalSection />
-
-                <div className="pt-6">
-                    <Button
-                        type="submit"
-                        variant="primary"
-                        className="w-full py-4 text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all"
-                        disabled={loading}
-                    >
-                        {loading ? "Registrando..." : "Registrarme"}
-                    </Button>
-                </div>
+                )}
             </form>
         </div>
     );

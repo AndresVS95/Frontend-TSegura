@@ -30,6 +30,7 @@ const MisBoletos: React.FC = () => {
           fecha: b.fechaEvento || 'Fecha pendiente',
           lugar: b.lugar || 'Ubicación en el boleto',
           zona: b.nombreZona || 'General',
+          mintTxHash: b.mintTxHash || null,
           estadoNft: (b.estadoBoleto?.toString().trim().toUpperCase() === 'MINTED' || b.mintTxHash) 
             ? 'MINTED' 
             : 'PENDING',
@@ -63,7 +64,7 @@ const MisBoletos: React.FC = () => {
         {boletos.length === 0 ? (
           <div className="bg-white rounded-[2.5rem] p-20 text-center shadow-sm border border-gray-100">
             <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-[#1E5ADF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-10 h-10 text-[#2748E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
               </svg>
             </div>
@@ -71,7 +72,7 @@ const MisBoletos: React.FC = () => {
             <p className="text-gray-400 mb-8">Tus entradas compradas aparecerán aquí automáticamente.</p>
             <button
               onClick={() => navigate('/')}
-              className="bg-[#1E5ADF] text-white px-8 py-4 rounded-2xl font-black transition-all hover:bg-blue-700 shadow-lg shadow-blue-100"
+              className="bg-[#2748E8] text-white px-8 py-4 rounded-2xl font-black transition-all hover:bg-blue-700 shadow-lg shadow-blue-100"
             >
               Explorar eventos
             </button>

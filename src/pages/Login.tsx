@@ -5,31 +5,34 @@ import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { loginUsuario } from '../services/authService';
 import { tokenManager } from '../lib/tokenManager';
+import { CheckCircle2, ChevronRight, Lock, Mail } from 'lucide-react';
 
 export type { DecodedToken } from '../types/auth.types';
 
-// ─── COMPONENTES VISUALES ─────────────────────────────────────────────
+// ─── COMPONENTE DEL BANNER (Estilo Claude Design) ─────────────────────
 
 const AuthBanner = () => (
-    <div className="hidden md:flex md:w-5/12 bg-[#1E5ADF] text-white p-12 flex-col justify-between relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-            <div className="w-full h-full bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-white to-transparent"></div>
+    <div className="hidden lg:flex lg:w-[40%] bg-gradient-to-br from-[#2748E8] via-[#2748E8] to-[#1a35c7] text-white p-16 flex-col justify-between relative overflow-hidden h-screen sticky top-0">
+        {/* Glow decorativo */}
+        <div className="absolute top-[-10%] right-[-10%] w-80 h-80 bg-blue-400/20 blur-[120px] rounded-full" />
+
+        <div>
+            <div className="flex items-center gap-2 mb-12">
+                <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center backdrop-blur-sm border border-white/20">
+                    <CheckCircle2 className="text-white" size={18} />
+                </div>
+                <span className="text-2xl font-black tracking-tighter">TSegura<span className="text-white">.</span></span>
+            </div>
         </div>
 
         <div className="relative z-10">
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-                <span className="text-3xl">🎫</span> TSegura.
-            </h1>
-        </div>
-
-        <div className="relative z-10 max-w-md">
-            <span className="text-4xl text-blue-300 font-serif leading-none">"</span>
-            <p className="text-lg leading-relaxed mt-2 mb-6 text-blue-50">
+            <span className="text-4xl font-serif italic mb-6 block opacity-20">"</span>
+            <h2 className="text-3xl font-bold leading-tight mb-8">
                 Tu acceso seguro a los mejores eventos. Inicia sesión para gestionar tus entradas.
-            </p>
+            </h2>
             <div className="flex items-center gap-2">
-                <span className="font-semibold">El equipo de TSegura</span>
-                <span className="text-green-400">✓</span>
+                <span className="text-sm font-bold opacity-80">El equipo de TSegura</span>
+                <CheckCircle2 size={16} className="text-[#F5C518] shadow-sm" />
             </div>
         </div>
     </div>
@@ -41,7 +44,6 @@ export const Login: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // ✅ Si venía de una ruta protegida, redirigir ahí; si no, al catálogo
     const desde = location.state?.from?.pathname || '/';
 
     const [showPassword, setShowPassword] = useState(false);
@@ -63,99 +65,69 @@ export const Login: React.FC = () => {
                 throw new Error('No se recibió un token válido del servidor');
             }
 
-            // ✅ Guardar token ANTES de decodificar y navegar
             tokenManager.set(token);
-            
-            // Usamos tokenManager.getUser() en lugar de jwtDecode directamente
-            // para asegurar que el token se valida (expiración, etc.)
             const user = tokenManager.getUser();
-            
-            if (!user) {
-                throw new Error("Token inválido o expirado");
-            }
 
-            if (user.perfil === 'COMPRADOR') {
-                const carritoStr = localStorage.getItem('carrito_pendiente');
-                if (carritoStr) {
-                    try {
-                        const carritoData = JSON.parse(carritoStr);
-                        localStorage.removeItem('carrito_pendiente');
-                        navigate(`/pago/${carritoData.zonaId}`, { state: carritoData, replace: true });
-                        return;
-                    } catch (e) {
-                        localStorage.removeItem('carrito_pendiente');
-                    }
-                }
-            }
+            if (!user) throw new Error("Token inválido o expirado");
 
-            if (desde !== '/' && desde !== '/login') {
-                navigate(desde, { replace: true });
-            } else if (user.perfil === 'ORGANIZADOR') {
+            // Redirección inteligente
+            if (user.perfil === 'ORGANIZADOR') {
                 navigate('/dashboard-organizer', { replace: true });
-            } else if (user.perfil === 'COMPRADOR') {
-                navigate('/', { replace: true }); // Ahora el catálogo único es /
             } else {
-                // ✅ Fallback seguro: catálogo, nunca a una ruta inexistente
-                console.warn(`Perfil desconocido: "${user.perfil}" — revisar campo en JWT`);
-                navigate('/', { replace: true });
+                navigate(desde, { replace: true });
             }
 
         } catch (error: any) {
             console.error("Error en el login:", error);
-            
             const { status, data } = error.response || {};
-
-            if (status === 429) {
-                setErrorMsg("Demasiados intentos. Tu cuenta ha sido bloqueada temporalmente.");
-            } else {
-                setErrorMsg(data?.message || data?.error || "Credenciales incorrectas o error de conexión.");
-            }
-            
-            // Por seguridad, si hay error crítico en el proceso, limpiamos el token parcial
-            tokenManager.remove(); 
+            setErrorMsg(data?.message || "Credenciales incorrectas. Por favor, verifica tus datos.");
+            tokenManager.remove();
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex flex-col md:flex-row bg-white">
+        <div className="min-h-screen flex bg-white font-sans overflow-hidden">
             <AuthBanner />
 
             {/* Panel derecho: formulario */}
-            <div className="w-full md:w-7/12 flex items-center justify-center p-6 sm:p-12 lg:p-20 overflow-y-auto">
-                <div className="w-full max-w-md animate-fade-in">
+            <div className="w-full lg:w-[60%] flex items-center justify-center p-8 md:p-16 lg:p-24 overflow-y-auto bg-[#FDFDFF]">
+                <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-                    <div className="mb-10">
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                            Inicia sesión en tu cuenta
-                        </h2>
+                    <div className="mb-12">
+                        <h1 className="text-5xl font-black text-gray-900 mb-2 tracking-tight">
+                            Inicia <span className="text-[#2748E8]">Sesión.</span>
+                        </h1>
+                        <p className="text-gray-400 font-medium">Ingresa tus credenciales para continuar.</p>
                     </div>
 
                     {errorMsg && (
-                        <div className="mb-6 p-3 bg-red-50 text-red-600 text-sm border border-red-200 rounded-lg">
+                        <div className="mb-8 p-4 bg-red-50 text-red-600 text-xs font-bold border border-red-100 rounded-2xl animate-bounce uppercase tracking-tighter">
                             {errorMsg}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit}>
-                        <Input
-                            label="Correo"
-                            id="email"
-                            type="email"
-                            placeholder="Correo"
-                            value={correo}
-                            onChange={(e) => setCorreo(e.target.value)}
-                            disabled={isLoading}
-                            required
-                        />
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <Input
+                                label="Correo electrónico"
+                                id="email"
+                                type="email"
+                                placeholder="tu@correo.com"
+                                value={correo}
+                                onChange={(e) => setCorreo(e.target.value)}
+                                disabled={isLoading}
+                                required
+                            />
+                        </div>
 
-                        <div className="mt-4 relative">
+                        <div className="relative">
                             <Input
                                 label="Contraseña"
                                 id="password"
                                 type={showPassword ? 'text' : 'password'}
-                                placeholder="Contraseña"
+                                placeholder="Tu contraseña segura"
                                 value={contrasena}
                                 onChange={(e) => setContrasena(e.target.value)}
                                 disabled={isLoading}
@@ -164,36 +136,44 @@ export const Login: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="text-gray-400 hover:text-gray-600"
+                                        className="text-[10px] font-black text-[#2748E8] hover:underline px-2"
                                         disabled={isLoading}
                                     >
-                                        {showPassword ? '🙈' : '👁️'}
+                                        {showPassword ? 'OCULTAR' : 'VER'}
                                     </button>
                                 }
                             />
 
-                            <div className="flex justify-end mt-2 mb-6">
+                            <div className="flex justify-end mt-4">
                                 <Link
                                     to="/forgot-password"
-                                    className="text-sm text-[#1E5ADF] hover:underline font-medium"
+                                    className="text-xs text-gray-400 hover:text-[#2748E8] font-bold uppercase tracking-widest transition-colors"
                                 >
                                     ¿Olvidaste tu contraseña?
                                 </Link>
                             </div>
                         </div>
 
-                        <Button type="submit" variant="primary" disabled={isLoading}>
-                            {isLoading ? 'Iniciando...' : 'Iniciar sesión'}
-                        </Button>
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full mt-12 bg-[#2748E8] disabled:bg-blue-300 text-white py-5 rounded-[2rem] font-black shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 group"
+                        >
+                            {isLoading ? (
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <>Ingresar <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" /></>
+                            )}
+                        </button>
                     </form>
 
-                    <p className="mt-8 text-center text-sm text-gray-600">
+                    <p className="mt-12 text-center text-sm text-gray-400 font-medium">
                         ¿Nuevo en TSegura?{' '}
                         <Link
                             to="/register"
-                            className="text-[#1E5ADF] hover:underline font-bold"
+                            className="text-[#2748E8] font-black hover:underline"
                         >
-                            Crear cuenta
+                            Crear una cuenta ahora
                         </Link>
                     </p>
 

@@ -58,8 +58,10 @@ const FormularioPago: React.FC<{ pedido: PedidoState; total: number }> = ({ pedi
         paymentMethodId: result.paymentMethod.id
       };
 
-      await api.post('/api/ventas/automatica', payload);
-      navigate(`/pago/procesando/${reservaId || 'exito'}`);
+      const { data: resultadoVenta } = await api.post('/api/ventas/automatica', payload);
+      navigate('/pago/procesando/nuevo', {
+        state: { pedido, resultadoVenta }
+      });
       
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al comunicarse con el servidor.');
@@ -69,7 +71,7 @@ const FormularioPago: React.FC<{ pedido: PedidoState; total: number }> = ({ pedi
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100">
-      <h3 className="text-2xl font-black text-[#0F172A] mb-8">Información de Pago</h3>
+      <h3 className="text-2xl font-black text-[#0D0D0D] mb-8">Información de Pago</h3>
 
       <div className="space-y-6">
         <div>
@@ -80,7 +82,7 @@ const FormularioPago: React.FC<{ pedido: PedidoState; total: number }> = ({ pedi
             onChange={(e) => setNombreTitular(e.target.value)}
             placeholder="Ej: Juan Pérez"
             required
-            className="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl font-bold text-[#0F172A] outline-none focus:border-blue-200 transition-all placeholder:text-gray-300"
+            className="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl font-bold text-[#0D0D0D] outline-none focus:border-blue-200 transition-all placeholder:text-gray-300"
           />
         </div>
 
@@ -92,7 +94,7 @@ const FormularioPago: React.FC<{ pedido: PedidoState; total: number }> = ({ pedi
             onChange={(e) => setCedula(e.target.value)}
             placeholder="Ej: 1023456789"
             required
-            className="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl font-bold text-[#0F172A] outline-none focus:border-blue-200 transition-all placeholder:text-gray-300"
+            className="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl font-bold text-[#0D0D0D] outline-none focus:border-blue-200 transition-all placeholder:text-gray-300"
           />
         </div>
 
@@ -103,7 +105,7 @@ const FormularioPago: React.FC<{ pedido: PedidoState; total: number }> = ({ pedi
               style: {
                 base: { 
                   fontSize: '16px', 
-                  color: '#0F172A', 
+                  color: '#0D0D0D', 
                   fontFamily: 'Manrope, sans-serif',
                   fontWeight: '700',
                   '::placeholder': { color: '#cbd5e1' } 
@@ -120,7 +122,7 @@ const FormularioPago: React.FC<{ pedido: PedidoState; total: number }> = ({ pedi
       <button
         type="submit"
         disabled={!stripe || procesando}
-        className="mt-10 w-full py-5 bg-[#1E5ADF] text-white rounded-[1.5rem] font-black text-sm hover:bg-blue-700 transition-all disabled:bg-gray-200 shadow-xl shadow-blue-100 flex justify-center items-center gap-3 active:scale-[0.98]"
+        className="mt-10 w-full py-5 bg-[#2748E8] text-white rounded-[1.5rem] font-black text-sm hover:bg-blue-700 transition-all disabled:bg-gray-200 shadow-xl shadow-blue-100 flex justify-center items-center gap-3 active:scale-[0.98]"
       >
         {procesando ? (
           <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Procesando...</>
@@ -162,7 +164,7 @@ const PagoReserva: React.FC = () => {
 
       <div className="max-w-5xl mx-auto px-12 py-16">
         <div className="flex items-center gap-3 mb-12">
-          <div className="w-8 h-8 rounded-full bg-[#1E5ADF] flex items-center justify-center text-white text-xs font-black">1</div>
+          <div className="w-8 h-8 rounded-full bg-[#2748E8] flex items-center justify-center text-white text-xs font-black">1</div>
           <h2 className="premium-title text-3xl">Pa<span>go</span></h2>
         </div>
 
@@ -184,24 +186,24 @@ const PagoReserva: React.FC = () => {
                   <img src={pedido.urlImagen || 'https://via.placeholder.com/200'} className="w-full h-full object-cover" alt="" />
                 </div>
                 <div>
-                  <h4 className="font-black text-[#0F172A] text-lg leading-tight mb-1">{pedido.eventoNombre}</h4>
+                  <h4 className="font-black text-[#0D0D0D] text-lg leading-tight mb-1">{pedido.eventoNombre}</h4>
                   <p className="text-gray-400 text-xs font-bold uppercase tracking-wide">Zona {pedido.zonaNombre}</p>
-                  <p className="text-[#1E5ADF] font-black text-sm mt-2">{pedido.cantidad} {pedido.cantidad === 1 ? 'entrada' : 'entradas'}</p>
+                  <p className="text-[#2748E8] font-black text-sm mt-2">{pedido.cantidad} {pedido.cantidad === 1 ? 'entrada' : 'entradas'}</p>
                 </div>
               </div>
 
               <div className="space-y-4 border-t border-gray-100 pt-8">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-400 font-bold">Subtotal</span>
-                  <span className="text-[#0F172A] font-black">${subtotal.toLocaleString('es-CO')}</span>
+                  <span className="text-[#0D0D0D] font-black">${subtotal.toLocaleString('es-CO')}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-400 font-bold">Cargo de servicio</span>
-                  <span className="text-[#0F172A] font-black">${cargoServicio.toLocaleString('es-CO')}</span>
+                  <span className="text-[#0D0D0D] font-black">${cargoServicio.toLocaleString('es-CO')}</span>
                 </div>
                 <div className="flex justify-between items-center pt-4">
                   <span className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Total a pagar</span>
-                  <span className="text-3xl font-black text-[#0F172A]">${totalFinal.toLocaleString('es-CO')}</span>
+                  <span className="text-3xl font-black text-[#0D0D0D]">${totalFinal.toLocaleString('es-CO')}</span>
                 </div>
               </div>
 

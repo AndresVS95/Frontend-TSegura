@@ -40,7 +40,7 @@ export default function CrearEvento() {
                 {[1, 2, 3].map((s) => (
                   <div 
                     key={s} 
-                    className={`h-1.5 w-8 rounded-full transition-all duration-500 ${s <= step ? 'bg-[#1E5ADF]' : 'bg-gray-200'}`}
+                    className={`h-1.5 w-8 rounded-full transition-all duration-500 ${s <= step ? 'bg-[#2748E8]' : 'bg-gray-200'}`}
                   />
                 ))}
               </div>

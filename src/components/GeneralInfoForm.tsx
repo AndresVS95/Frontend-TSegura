@@ -59,7 +59,7 @@ const GeneralInfoForm: React.FC<GeneralInfoFormProps> = ({ formData, handleChang
       <div className="flex justify-end mt-6 pt-6 border-t border-gray-100">
         <button
           onClick={nextStep}
-          className="px-8 py-3 rounded-xl font-bold text-white bg-[#1E5ADF] hover:bg-blue-700 transition-all"
+          className="px-8 py-3 rounded-xl font-bold text-white bg-[#2748E8] hover:bg-blue-700 transition-all"
         >
           Siguiente Paso
         </button>

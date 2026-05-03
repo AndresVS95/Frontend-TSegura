@@ -133,6 +133,7 @@ const VenueMap: React.FC<VenueMapProps> = ({ formData, setFormData, nextStep, pr
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all"
                     placeholder="Ej: 50000"
                   />
+                  <span className="text-gray-400 font-bold text-xs uppercase">COP</span>
                 </div>
               </div>
             );
@@ -143,7 +144,7 @@ const VenueMap: React.FC<VenueMapProps> = ({ formData, setFormData, nextStep, pr
 
       <div className="flex justify-between mt-10 pt-6 border-t border-gray-100">
         <button onClick={prevStep} className="px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all">Volver</button>
-        <button onClick={nextStep} className="px-8 py-3 rounded-xl font-bold text-white bg-[#1E5ADF] hover:bg-blue-700 transition-all">Siguiente Paso</button>
+        <button onClick={nextStep} className="px-8 py-3 rounded-xl font-bold text-white bg-[#2748E8] hover:bg-blue-700 transition-all">Siguiente Paso</button>
       </div>
     </div>
   );

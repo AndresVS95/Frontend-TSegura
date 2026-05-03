@@ -23,10 +23,9 @@ const MapaInteractivo: React.FC<MapaInteractivoProps> = ({
   };
 
   const getFillColor = (zonaId: string): string => {
-    if (disponibilidad[zonaId] === 'AGOTADO') return '#EF4444'; // rojo = agotado
     if (!modoInteractivo) return '#D1D5DB'; // gris neutro si solo es visual
-    if (zonaSeleccionada === zonaId) return '#1E5ADF'; // azul = seleccionada
-    return '#6B7280'; // gris oscuro = disponible no seleccionada
+    if (zonaSeleccionada === zonaId) return '#2748E8'; // azul = seleccionada
+    return '#6B7280'; // gris oscuro = disponible
   };
 
   const getStrokeColor = (zonaId: string): string => {
@@ -36,7 +35,6 @@ const MapaInteractivo: React.FC<MapaInteractivoProps> = ({
 
   const getCursorStyle = (zonaId: string): string => {
     if (!modoInteractivo) return '';
-    if (disponibilidad[zonaId] === 'AGOTADO') return 'cursor-not-allowed opacity-70';
     return 'cursor-pointer hover:opacity-80 transition-opacity';
   };
 
@@ -81,13 +79,11 @@ const MapaInteractivo: React.FC<MapaInteractivoProps> = ({
       </text>
 
       {/* Leyenda */}
-      <g transform="translate(30, 540)">
-        <rect x="0" y="0" width="12" height="12" rx="3" fill="#1E5ADF" />
+      <g transform="translate(130, 540)">
+        <rect x="0" y="0" width="12" height="12" rx="3" fill="#2748E8" />
         <text x="16" y="10" fontFamily="sans-serif" fontSize="10" fill="#374151">Seleccionada</text>
         <rect x="95" y="0" width="12" height="12" rx="3" fill="#6B7280" />
-        <text x="111" y="10" fontFamily="sans-serif" fontSize="10" fill="#374151">Disponible</text>
-        <rect x="188" y="0" width="12" height="12" rx="3" fill="#EF4444" />
-        <text x="204" y="10" fontFamily="sans-serif" fontSize="10" fill="#374151">Agotada</text>
+        <text x="111" y="10" fontFamily="sans-serif" fontSize="10" fill="#374151">Zona de Asientos</text>
       </g>
 
       {/* Etiquetas de zona a la derecha */}

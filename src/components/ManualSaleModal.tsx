@@ -87,7 +87,7 @@ export const ManualSaleModal: React.FC<ManualSaleModalProps> = ({ isOpen, onClos
                 value={formData.cedulaComprador}
                 onChange={handleChange}
                 required
-                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-[#1E5ADF] focus:ring-0 outline-none transition-colors"
+                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-[#2748E8] focus:ring-0 outline-none transition-colors"
                 placeholder="100200300"
               />
             </div>
@@ -99,7 +99,7 @@ export const ManualSaleModal: React.FC<ManualSaleModalProps> = ({ isOpen, onClos
                 value={formData.nombreComprador}
                 onChange={handleChange}
                 required
-                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-[#1E5ADF] focus:ring-0 outline-none transition-colors"
+                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-[#2748E8] focus:ring-0 outline-none transition-colors"
                 placeholder="Juan Pérez"
               />
             </div>
@@ -113,7 +113,7 @@ export const ManualSaleModal: React.FC<ManualSaleModalProps> = ({ isOpen, onClos
                 value={formData.zonaEventoId}
                 onChange={handleChange}
                 required
-                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-[#1E5ADF] outline-none"
+                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-[#2748E8] outline-none"
               >
                 <option value="">Selecciona Zona...</option>
                 {evento.zonas?.map((zona, idx) => (
@@ -131,7 +131,7 @@ export const ManualSaleModal: React.FC<ManualSaleModalProps> = ({ isOpen, onClos
                 value={formData.cantidad}
                 onChange={handleChange}
                 required
-                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-[#1E5ADF] outline-none"
+                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-[#2748E8] outline-none"
               />
             </div>
           </div>
@@ -142,7 +142,7 @@ export const ManualSaleModal: React.FC<ManualSaleModalProps> = ({ isOpen, onClos
                 name="metodoPago"
                 value={formData.metodoPago}
                 onChange={handleChange}
-                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-[#1E5ADF] outline-none font-medium text-gray-800"
+                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-[#2748E8] outline-none font-medium text-gray-800"
               >
                 <option value="EFECTIVO">💵 Efectivo (Dinero físico)</option>
                 <option value="TRANSFERENCIA">🏦 Transferencia Bancaria</option>
@@ -161,7 +161,7 @@ export const ManualSaleModal: React.FC<ManualSaleModalProps> = ({ isOpen, onClos
             <button 
               type="submit" 
               disabled={loading}
-              className={`px-8 py-3 font-bold text-white bg-[#1E5ADF] hover:bg-blue-700 rounded-xl shadow-lg transition-all flex items-center justify-center ${loading ? 'opacity-50' : ''}`}
+              className={`px-8 py-3 font-bold text-white bg-[#2748E8] hover:bg-blue-700 rounded-xl shadow-lg transition-all flex items-center justify-center ${loading ? 'opacity-50' : ''}`}
             >
               {loading ? 'Registrando...' : 'Emitir Boleto NFT'}
             </button>

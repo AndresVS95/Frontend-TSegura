@@ -44,20 +44,20 @@ export default function ZonesPublish({ submitEvent, prevStep, isLoading, formDat
             {formData.zonas.map((zona: any, idx: number) => (
               <div key={idx} className="flex justify-between text-sm">
                 <span className="font-medium text-gray-700">{zona.nombreZona}</span>
-                <span className="font-bold text-[#1E5ADF]">${zona.precio} USD</span>
+                <span className="font-bold text-[#2748E8]">${zona.precio} COP</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Alerta de Blockchain */}
-      <div className="bg-green-50 border border-green-200 p-6 rounded-2xl flex items-start gap-4 shadow-sm mb-10 transition-all">
-        <span className="text-3xl">✅</span>
+      {/* Alerta de Publicación */}
+      <div className="bg-blue-50 border border-blue-200 p-6 rounded-2xl flex items-start gap-4 shadow-sm mb-10 transition-all">
+        <span className="text-3xl">ℹ️</span>
         <div>
-          <h4 className="font-bold text-green-900 mb-1 text-lg">Información Completa</h4>
-          <p className="text-sm text-green-700 leading-relaxed">
-            Todos los datos son válidos. El contrato inteligente (NFT) está listo para generarse en la blockchain de forma segura al momento de publicar el evento.
+          <h4 className="font-bold text-blue-900 mb-1 text-lg">Revisión Finalizada</h4>
+          <p className="text-sm text-blue-700 leading-relaxed">
+            Tu evento está listo para ser publicado. Al hacerlo, se activará la venta de boletos y cada compra generará automáticamente un ticket NFT en la blockchain para el comprador.
           </p>
         </div>
       </div>
@@ -68,7 +68,7 @@ export default function ZonesPublish({ submitEvent, prevStep, isLoading, formDat
         <button 
           onClick={prevStep} 
           disabled={isLoading}
-          className="text-sm font-bold text-gray-500 hover:text-[#1E5ADF] transition-colors disabled:opacity-50"
+          className="text-sm font-bold text-gray-500 hover:text-[#2748E8] transition-colors disabled:opacity-50"
         >
           ← Paso anterior
         </button>
@@ -83,14 +83,14 @@ export default function ZonesPublish({ submitEvent, prevStep, isLoading, formDat
           >
             {isLoading ? 'Guardando...' : 'Guardar como Borrador'}
           </button>
-
+ 
           {/* Publicar */}
           <button 
             onClick={validarYPublicar}
             disabled={isLoading}
             className="px-8 py-3 rounded-xl font-bold text-white bg-[#10b981] hover:bg-[#059669] transition-all shadow-lg shadow-green-200/50 disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {isLoading ? 'Generando Contrato...' : 'Publicar Evento Oficialmente'}
+            {isLoading ? 'Publicando...' : 'Publicar Evento Oficialmente'}
           </button>
 
         </div>

@@ -1,6 +1,7 @@
 // src/components/TicketCard.tsx
 import React, { useState } from 'react';
 import ModalQR from './ModalQR';
+import { ExternalLink, ShieldCheck, Ticket as TicketIcon, QrCode } from 'lucide-react';
 
 interface BoletoProps {
   boleto: {
@@ -9,6 +10,7 @@ interface BoletoProps {
     fecha: string;
     lugar: string;
     zona: string;
+    mintTxHash?: string | null;
     estadoNft: 'MINTED' | 'PENDING';
   };
 }
@@ -18,73 +20,94 @@ const TicketCard: React.FC<BoletoProps> = ({ boleto }) => {
   const [expandido, setExpandido] = useState(false);
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-4 transition-all">
+    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-4 transition-all hover:border-blue-100 group/card">
       {/* ── Fila Principal ── */}
       <div 
         onClick={() => setExpandido(!expandido)}
-        className="p-5 flex flex-col md:flex-row items-center gap-6 cursor-pointer hover:bg-gray-50 transition-colors"
+        className="p-6 flex flex-col md:flex-row items-center gap-6 cursor-pointer hover:bg-gray-50/50 transition-colors"
       >
-        {/* Miniatura Imagen */}
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex-shrink-0 shadow-inner" />
+        {/* Miniatura Imagen / Icono */}
+        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#2748E8] to-blue-400 flex-shrink-0 shadow-lg shadow-blue-100 flex items-center justify-center">
+            <TicketIcon className="text-white opacity-40" size={32} />
+        </div>
 
         {/* Info Principal */}
         <div className="flex-grow text-center md:text-left">
-          <div className="flex items-center gap-3 justify-center md:justify-start mb-1">
-            <h3 className="text-xl font-black text-gray-900">{boleto.evento}</h3>
-            <span className={`text-[10px] font-black px-2 py-1 rounded-full uppercase ${
-              boleto.estadoNft === 'MINTED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+          <div className="flex items-center gap-3 justify-center md:justify-start mb-2">
+            <h3 className="text-xl font-black text-gray-900 leading-tight">{boleto.evento}</h3>
+            <span className={`text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest flex items-center gap-1 ${
+              boleto.estadoNft === 'MINTED' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
             }`}>
-              ● {boleto.estadoNft === 'MINTED' ? 'Válido' : 'Procesando'}
+              <span className={`w-1.5 h-1.5 rounded-full ${boleto.estadoNft === 'MINTED' ? 'bg-green-500' : 'bg-amber-500'} animate-pulse`} />
+              {boleto.estadoNft === 'MINTED' ? 'Verificado' : 'Procesando'}
             </span>
           </div>
           
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 justify-center md:justify-start text-sm text-gray-400 font-bold uppercase tracking-wider">
-            <span>🎟️ {boleto.zona}</span>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 justify-center md:justify-start text-xs text-gray-400 font-bold uppercase tracking-widest">
+            <span className="flex items-center gap-1.5 text-gray-500"><TicketIcon size={14} className="text-[#2748E8]" /> {boleto.zona}</span>
             <span>📅 {boleto.fecha}</span>
             <span>📍 {boleto.lugar}</span>
-            <span className="text-gray-300">Token #{boleto.id}</span>
+            <span className="text-gray-300 font-mono">ID #{boleto.id}</span>
           </div>
         </div>
 
-        {/* Botones de Acción */}
+        {/* Botones de Acción Rápidos */}
         <div className="flex items-center gap-3">
           <button
             onClick={(e) => {
               e.stopPropagation();
               setModalAbierto(true);
             }}
-            className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-3 rounded-2xl font-black text-xs transition-all active:scale-95"
+            className="flex items-center gap-2 bg-white border border-gray-100 hover:border-[#2748E8] hover:text-[#2748E8] text-gray-600 px-6 py-3.5 rounded-2xl font-black text-xs transition-all active:scale-95 shadow-sm"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-            </svg>
+            <QrCode size={18} />
             VER QR
           </button>
           
           <button
             onClick={(e) => e.stopPropagation()}
-            className="bg-[#1E5ADF] hover:bg-blue-700 text-white px-5 py-3 rounded-2xl font-black text-xs shadow-lg shadow-blue-100 transition-all active:scale-95"
+            className="bg-[#2748E8] hover:bg-blue-700 text-white px-6 py-3.5 rounded-2xl font-black text-xs shadow-xl shadow-blue-500/10 transition-all active:scale-95"
           >
-            PONER EN REVENTA
+            VENDER
           </button>
         </div>
       </div>
 
-      {/* ── Despliegue de Detalles ── */}
+      {/* ── Despliegue de Detalles & Blockchain ── */}
       {expandido && (
-        <div className="px-5 pb-6 pt-2 border-t border-dashed border-gray-100 animate-fade-in">
-          <div className="bg-gray-50 rounded-2xl p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="px-6 pb-8 pt-2 border-t border-dashed border-gray-100 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="bg-gray-50/50 rounded-3xl p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Contrato</p>
-              <p className="text-xs font-mono text-gray-600 break-all">0x9c8b...41a2</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                <ShieldCheck size={12} className="text-green-500" /> Estado NFT
+              </p>
+              <p className="text-xs font-black text-gray-700 uppercase">Asegurado por Blockchain</p>
             </div>
+            
             <div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Red</p>
-              <p className="text-xs font-black text-[#1E5ADF] uppercase">Polygon Amoy</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Red</p>
+              <p className="text-xs font-black text-[#2748E8] uppercase flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-[#2748E8]" /> Polygon Amoy
+              </p>
             </div>
-            <div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Beneficios</p>
-              <p className="text-xs text-gray-600">Acceso preferencial, Barra libre (si aplica).</p>
+
+            <div className="lg:col-span-2 flex flex-col justify-center">
+              {boleto.mintTxHash ? (
+                <a
+                  href={`https://amoy.polygonscan.com/tx/${boleto.mintTxHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3 bg-white border border-blue-100 text-[#2748E8] rounded-2xl font-black text-xs hover:bg-[#2748E8] hover:text-white transition-all shadow-sm group/btn"
+                >
+                  <ExternalLink size={16} className="group-hover/btn:rotate-12 transition-transform" />
+                  VERIFICAR EN POLYGON AMOY
+                </a>
+              ) : (
+                <div className="px-6 py-3 bg-amber-50 text-amber-700 rounded-2xl font-bold text-[10px] uppercase text-center border border-amber-100">
+                  Transacción procesándose...
+                </div>
+              )}
             </div>
           </div>
         </div>

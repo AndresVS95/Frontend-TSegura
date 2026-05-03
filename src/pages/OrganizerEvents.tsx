@@ -54,7 +54,7 @@ const OrganizerEvents: React.FC = () => {
         </div>
         <button 
           onClick={() => navigate('/crearevento')}
-          className="bg-[#1E5ADF] text-white px-8 py-4 rounded-2xl font-black hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2"
+          className="bg-[#2748E8] text-white px-8 py-4 rounded-2xl font-black hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2"
         >
           <Plus size={20} /> Crear Nuevo Evento
         </button>
@@ -67,7 +67,7 @@ const OrganizerEvents: React.FC = () => {
             <input 
               type="text"
               placeholder="Buscar evento por nombre..."
-              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#1E5ADF] outline-none"
+              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#2748E8] outline-none"
               value={filtro}
               onChange={(e) => setFiltro(e.target.value)}
             />
@@ -135,7 +135,7 @@ const OrganizerEvents: React.FC = () => {
                           )}
                           <button 
                             onClick={() => navigate(`/detalles/${idReal}`)} 
-                            className="text-[#1E5ADF] font-black text-xs hover:underline uppercase tracking-widest"
+                            className="text-[#2748E8] font-black text-xs hover:underline uppercase tracking-widest"
                           >
                             Detalles
                           </button>

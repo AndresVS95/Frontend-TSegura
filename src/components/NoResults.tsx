@@ -20,7 +20,7 @@ const NoResults: React.FC<NoResultsProps> = ({ termino }) => {
       </p>
       <button 
         onClick={() => window.location.reload()}
-        className="mt-6 text-[#1E5ADF] font-bold text-sm hover:underline"
+        className="mt-6 text-[#2748E8] font-bold text-sm hover:underline"
       >
         Ver todos los eventos
       </button>
