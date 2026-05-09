@@ -2,7 +2,7 @@
  * Roles disponibles en el sistema TSegura.
  * Se usa para tipado fuerte en PrivateRoute, Login y validaciones de rol.
  */
-export type UserRole = 'COMPRADOR' | 'ORGANIZADOR' | 'VALIDADOR';
+export type UserRole = 'ADMIN' | 'COMPRADOR' | 'ORGANIZADOR' | 'VALIDADOR';
 
 /**
  * Estructura del payload del JWT que devuelve el backend de Spring Boot.

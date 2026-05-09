@@ -9,6 +9,11 @@ import Home from './pages/Home';
 import PrivateRoute from './components/PrivateRoute';
 import CrearEvento from './pages/CrearEvento';
 import DetalleEventoOrg from './pages/DetalleEventoOrg';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import SolicitudesOrganizadores from './pages/admin/SolicitudesOrganizadores';
+import BuscadorUsuarios from './pages/admin/BuscadorUsuarios';
+import CrearUsuarioAdmin from './pages/admin/CrearUsuarioAdmin';
+import AdminGuard from './components/AdminGuard';
 
 // Importaciones de los nuevos módulos de la Suite de Organizador
 import OrganizerEvents from './pages/OrganizerEvents';
@@ -154,6 +159,48 @@ function App() {
             }
           />
 
+          
+
+          {/* ── Rutas Admin ── */}
+          <Route 
+           path="/admin/dashboard"     
+           element={
+             <AdminGuard>
+             <AdminDashboard />
+             </AdminGuard>
+           } 
+          />
+
+
+          <Route 
+            path="/admin/solicitudes"   
+            element={
+            <AdminGuard>
+            <SolicitudesOrganizadores />
+            </AdminGuard>
+          }
+          />
+
+
+          <Route 
+            path="/admin/usuarios"      
+            element={
+              <AdminGuard>
+              <BuscadorUsuarios />
+              </AdminGuard>
+          }
+          />
+          
+          
+          <Route 
+            path="/admin/crear-usuario" 
+            element={
+              <AdminGuard>
+              <CrearUsuarioAdmin />
+              </AdminGuard>
+          } 
+          />
+        
           {/* Ruta comodín */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
