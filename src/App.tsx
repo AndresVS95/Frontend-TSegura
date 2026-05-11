@@ -1,32 +1,41 @@
-// src/App.tsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+// login
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
-import DashboardOrganizer from './pages/DashboardOrganizer';
-import Home from './pages/Home';
+//guards
 import PrivateRoute from './components/PrivateRoute';
-import CrearEvento from './pages/CrearEvento';
-import DetalleEventoOrg from './pages/DetalleEventoOrg';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import SolicitudesOrganizadores from './pages/admin/SolicitudesOrganizadores';
-import BuscadorUsuarios from './pages/admin/BuscadorUsuarios';
-import CrearUsuarioAdmin from './pages/admin/CrearUsuarioAdmin';
 import AdminGuard from './components/AdminGuard';
-
-// Importaciones de los nuevos módulos de la Suite de Organizador
+//comprador
+import Home from './pages/Home';
+import EventoDetalle from './components/EventoDetalle';
+import PagoReserva from './pages/PagoReserva';
+import ProcesandoPago from './components/ProcesandoPago';
+import ResultadoPago from './components/ResultadoPago';
+import MisBoletos from './pages/MisBoletos';
+//Organizador-Gestion de eventos
+import DashboardOrganizer from './pages/DashboardOrganizer';
 import OrganizerEvents from './pages/OrganizerEvents';
 import OrganizerFinances from './pages/OrganizerFinances';
 import OrganizerValidator from './pages/OrganizerValidator';
 import OrganizerSettings from './pages/OrganizerSettings';
-
-import EventoDetalle from './components/EventoDetalle';
-import PagoReserva from './pages/PagoReserva';
-import MisBoletos from './pages/MisBoletos';
-import ProcesandoPago from './components/ProcesandoPago';
-import ResultadoPago from './components/ResultadoPago';
+import CrearEvento from './pages/CrearEvento';
+import DetalleEventoOrg from './pages/DetalleEventoOrg';
 import PanelAsistentesZona from './components/PanelAsistentesZona';
+//Organizador-Panel de administracion en tiempo real
+import PanelVentasRealTime from './pages/PanelVentasRealTime';
+import PanelIngresos from './pages/PanelIngresos';
+import PanelCheckin from './pages/PanelCheckin';
+import MapaZonasRealTime from './pages/MapaZonasRealTime';
+//Admin
+import AdminDashboard from './pages/admin/AdminDashboard';
+import SolicitudesOrganizadores from './pages/admin/SolicitudesOrganizadores';
+import BuscadorUsuarios from './pages/admin/BuscadorUsuarios';
+import CrearUsuarioAdmin from './pages/admin/CrearUsuarioAdmin';
+
+
+// Importaciones de los nuevos módulos de la Suite de Organizador
 
 
 function App() {
@@ -159,7 +168,38 @@ function App() {
             }
           />
 
-          
+           <Route
+            path="/organizer/eventos/:id/ventas"
+            element={
+              <PrivateRoute allowedRole="ORGANIZADOR">
+                <PanelVentasRealTime />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/organizer/eventos/:id/ingresos"
+            element={
+              <PrivateRoute allowedRole="ORGANIZADOR">
+                <PanelIngresos />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/organizer/eventos/:id/checkin"
+            element={
+              <PrivateRoute allowedRole="ORGANIZADOR">
+                <PanelCheckin />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/organizer/eventos/:id/zonas"
+            element={
+              <PrivateRoute allowedRole="ORGANIZADOR">
+                <MapaZonasRealTime />
+              </PrivateRoute>
+            }
+          />
 
           {/* ── Rutas Admin ── */}
           <Route 
